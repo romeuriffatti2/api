@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Certificado</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+        }
+        .certificate-page {
+            width: 297mm;
+            height: 210mm;
+            padding: 20mm;
+            box-sizing: border-box;
+            background-color: #fff;
+            position: relative;
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 15px solid #1a3a5f;
+            outline: 5px solid #c5a059;
+            outline-offset: -25px;
+        }
+        .certificate-page:last-child {
+            page-break-after: auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20mm;
+        }
+        .header h1 {
+            font-size: 48pt;
+            margin: 0;
+            color: #1a3a5f;
+            text-transform: uppercase;
+            letter-spacing: 5pt;
+        }
+        .content {
+            text-align: center;
+            max-width: 80%;
+        }
+        .content p {
+            font-size: 18pt;
+            margin: 10pt 0;
+        }
+        .name {
+            font-size: 36pt;
+            font-weight: bold;
+            color: #c5a059;
+            margin: 20pt 0;
+            text-decoration: underline;
+        }
+        .magazine-info {
+            font-style: italic;
+            color: #555;
+        }
+        .footer {
+            position: absolute;
+            bottom: 20mm;
+            left: 20mm;
+            right: 20mm;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10pt;
+            color: #777;
+        }
+        .validation-code {
+            font-family: monospace;
+        }
+        .date {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div th:each="cert : ${certificates}" class="certificate-page">
+        <div class="header">
+            <h1>Certificado</h1>
+        </div>
+        <div class="content">
+            <p>Certificamos que</p>
+            <div class="name" th:text="${cert.name}">Nome do Participante</div>
+            <p>participou e concluiu com sucesso as atividades relacionadas à revista</p>
+            <div class="magazine-info">
+                <strong th:text="${cert.magazine.name}">Nome da Revista</strong><br/>
+                <span>ISSN: </span><span th:text="${cert.magazine.issn}">0000-0000</span>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="validation-code">
+                Código de Validação: <span th:text="${cert.validation_code}">UUID-VALIDATION-CODE</span>
+            </div>
+            <div class="date">
+                Gerado em: <span th:text="${#temporals.format(cert.createdAt, 'dd/MM/yyyy HH:mm')}">20/03/2026</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
