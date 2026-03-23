@@ -12,4 +12,10 @@ public class CertificateRequest {
     private List<CertificateItemRequest> certificates;
 
     private Long magazineId;
+
+    private String type;
+
+    private String volume;
+
+    private String number;
 }

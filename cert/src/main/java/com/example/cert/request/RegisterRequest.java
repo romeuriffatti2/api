@@ -2,20 +2,14 @@ package com.example.cert.request;
 
 import lombok.Getter;
 import lombok.Setter;
+import java.time.LocalDate;
 
 @Getter
 @Setter
-public class MagazineRequest {
-
-    private Long id;
-
+public class RegisterRequest {
     private String name;
-
-    private String isbn;
-
-    private String issn;
-
+    private String cpf;
     private String email;
-
-    private String cnpj;
+    private String password;
+    private LocalDate birthDate;
 }

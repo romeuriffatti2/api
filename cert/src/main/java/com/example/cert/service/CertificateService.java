@@ -7,17 +7,16 @@ import com.example.cert.mapper.CertificateMapper;
 import com.example.cert.repository.CertificateRepository;
 import com.example.cert.repository.MagazineRepository;
 import com.example.cert.request.CertificateRequest;
-import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import com.example.cert.utils.GeneratePdfService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayOutputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +28,8 @@ public class CertificateService {
     private final CertificateRepository certificateRepository;
     private final CertificateMapper certificateMapper;
     private final MagazineRepository magazineRepository;
-    private final TemplateEngine templateEngine;
+
+    private final GeneratePdfService generatePdfService;
 
     public Page<CertificateResponse> getAllCertificates(Pageable pageable) {
         return certificateRepository
@@ -40,37 +40,32 @@ public class CertificateService {
     public byte[] create(CertificateRequest certificateRequest) {
 
         Magazine magazine = magazineRepository.findById(certificateRequest.getMagazineId()).orElseThrow(
-                () ->new ResponseStatusException(HttpStatus.NOT_FOUND, "Revista não encontrada"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Revista não encontrada"));
 
         List<Certificate> savedCertificates = new ArrayList<>();
-
         certificateRequest.getCertificates().forEach(item -> {
-            Certificate certificate = CertificateMapper.toEntity(item, magazine);
+            Certificate certificate = CertificateMapper.toEntity(
+                item, magazine, certificateRequest.getVolume(), certificateRequest.getNumber(), null, certificateRequest.getType()
+            );
             savedCertificates.add(certificateRepository.save(certificate));
         });
 
-        return generatePdf(savedCertificates);
+        return generatePdfService.generatePdf(savedCertificates);
     }
 
-    private byte[] generatePdf(List<Certificate> certificates) {
-        Context context = new Context();
-        context.setVariable("certificates", certificates);
-        String htmlContent = templateEngine.process("certificate", context);
 
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            PdfRendererBuilder builder = new PdfRendererBuilder();
-            builder.useFastMode();
-            builder.withHtmlContent(htmlContent, null);
-            builder.toStream(outputStream);
-            builder.run();
-            return outputStream.toByteArray();
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao gerar PDF", e);
-        }
-    }
+
+    @Transactional(readOnly = true)
     public CertificateResponse validateCertificate(String code) {
-        return certificateRepository.findByValidation_code(UUID.fromString(code))
+        return certificateRepository.findByValidationCode(UUID.fromString(code))
                 .map(certificateMapper::toResponse)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Certificado não encontrado"));
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] downloadCertificate(String code) {
+        Certificate certificate = certificateRepository.findByValidationCode(UUID.fromString(code))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Certificado não encontrado"));
+        return generatePdfService.generatePdf(List.of(certificate));
     }
 }

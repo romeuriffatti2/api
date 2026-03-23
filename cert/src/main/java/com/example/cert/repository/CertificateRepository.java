@@ -14,5 +14,5 @@ public interface CertificateRepository extends JpaRepository<Certificate, Long> 
     Page<Certificate> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"magazine"})
-    Optional<Certificate> findByValidation_code(UUID validation_code);
+    Optional<Certificate> findByValidationCode(UUID validationCode);
 }

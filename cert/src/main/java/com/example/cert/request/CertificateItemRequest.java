@@ -10,4 +10,5 @@ import java.util.UUID;
 public class CertificateItemRequest {
     private String name;
     private UUID validationCode;
+    private java.util.Map<String, Object> metadata;
 }

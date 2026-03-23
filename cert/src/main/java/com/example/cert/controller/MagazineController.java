@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/magazines")
+@RequestMapping("/api/magazines")
 @AllArgsConstructor
+@CrossOrigin(origins = "*")
 public class MagazineController {
 
     private final MagazineService magazineService;
@@ -27,5 +28,4 @@ public class MagazineController {
     public MagazineResponse postMagazine(@RequestBody MagazineRequest magazineRequest) {
         return magazineService.postMagazine(magazineRequest);
     }
-
 }

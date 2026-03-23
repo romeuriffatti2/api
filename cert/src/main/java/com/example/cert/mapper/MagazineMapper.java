@@ -17,6 +17,7 @@ public class MagazineMapper {
                 .isbn(magazine.getIsbn())
                 .issn(magazine.getIssn())
                 .email(magazine.getEmail())
+                .cnpj(magazine.getCnpj())
                 .build();
     }
 
@@ -26,6 +27,7 @@ public class MagazineMapper {
                 .isbn(request.getIsbn())
                 .issn(request.getIssn())
                 .email(request.getEmail())
+                .cnpj(request.getCnpj())
                 .build();
     }
 }

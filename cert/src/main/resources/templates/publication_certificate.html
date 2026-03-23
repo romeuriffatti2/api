@@ -9,8 +9,8 @@
         .certificate-page { width: 297mm; height: 210mm; padding: 15mm 20mm; box-sizing: border-box; background-color: #fff; position: relative; page-break-after: always; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .certificate-page:last-child { page-break-after: auto; }
         .header { text-align: center; margin-bottom: 10mm; margin-top: 25mm; }
-        .header h1 { font-size: 32pt; margin: 0; color: #000; text-transform: uppercase; letter-spacing: 3pt; font-weight: bold; }
-        .content { text-align: center; max-width: 90%; font-size: 16pt; line-height: 1.6; margin-bottom: 10mm; }
+        .header h1 { font-size: 20pt; margin: 0; color: #000; text-transform: uppercase; letter-spacing: 2pt; font-weight: bold; }
+        .content { text-align: justify; max-width: 90%; font-size: 14pt; line-height: 1.6; margin-bottom: 10mm; text-align-last: center; }
         .footer { position: absolute; bottom: 15mm; left: 20mm; right: 20mm; font-size: 10pt; color: #777; width: calc(100% - 40mm); }
         .footer-table { display: table; width: 100%; }
         .footer-left { display: table-cell; text-align: left; width: 50%; vertical-align: bottom; }
@@ -26,13 +26,13 @@
             se este certificado é válido. Código de validação: <span th:text="${cert.validationCode}">UUID-CODE</span>
         </div>
         <div class="header">
-            <h1>Certificado</h1>
+            <h1>CERTIFICADO DE PUBLICAÇÃO</h1>
         </div>
         <div th:if="${logoBase64 != null}" style="text-align: center; margin-top: 10px; margin-bottom: 15px;">
             <img th:src="'data:image/png;base64,' + ${logoBase64}" style="max-height: 80px; width: auto;" />
         </div>
         <div class="content">
-            Certificamos, para os devidos fins, que <strong th:text="${cert.name}">Nome do Participante</strong> participou e concluiu com sucesso as atividades relacionadas à revista <strong th:text="${cert.magazine.name}">Nome da Revista</strong>, registrada sob o ISSN <strong th:text="${cert.magazine.issn}">0000-0000</strong>.
+            A <strong th:text="${cert.magazine.name}">Nome da Revista</strong>, ISSN <span th:text="${cert.magazine.issn}">0000-0000</span> (Online), vinculada ao Centro de Estudos Interdisciplinares (CEEINTER), certifica, para os devidos fins, que o artigo intitulado "<strong th:text="${cert.metadata != null ? cert.metadata.get('articleTitle') : ''}"></strong>", de autoria de <strong th:text="${cert.name}">Autores</strong>, foi publicado no Volume <strong th:text="${cert.volume}"></strong>, Número <strong th:text="${cert.number}"></strong>, referente ao ano de <strong th:text="${#temporals.format(cert.createdAt, 'yyyy')}"></strong>, sob o DOI <strong th:text="${cert.metadata != null ? cert.metadata.get('doi') : ''}"></strong>.<br/><br/>O artigo encontra-se disponível para acesso aberto no site oficial da revista, no link: <span th:text="${cert.metadata != null ? cert.metadata.get('accessLink') : ''}"></span>.<br/><br/>A publicação foi aprovada após processo de avaliação por pares ad hoc, observando os critérios científicos e éticos que norteiam as boas práticas editoriais. A equipe editorial parabeniza os(as) autores(as) pela contribuição acadêmica, que fortalece o diálogo interdisciplinar e reafirma o compromisso da revista com a promoção e a disseminação de conhecimento científico qualitativo.
         </div>
         <div class="signatures-area">
             ____________________________________<br/>

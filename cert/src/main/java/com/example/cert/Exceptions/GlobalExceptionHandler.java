@@ -18,4 +18,14 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ApiErrorResponse handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        return ApiErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }

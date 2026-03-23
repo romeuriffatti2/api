@@ -37,7 +37,20 @@ public class CertificateController {
                 .body(pdf);
     }
     @GetMapping("/validate/{code}")
-    public ResponseEntity<CertificateResponse> validateCertificate(@PathVariable String code) {
+    public ResponseEntity<CertificateResponse> validateCertificate(@PathVariable("code") String code) {
         return ResponseEntity.ok(certificateService.validateCertificate(code));
+    }
+
+    @GetMapping("/download/{code}")
+    public ResponseEntity<byte[]> downloadCertificate(@PathVariable("code") String code) {
+        byte[] pdf = certificateService.downloadCertificate(code);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "certificado.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdf);
     }
 }

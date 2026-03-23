@@ -21,4 +21,16 @@ public class CertificateResponse {
 
     private MagazineResponse magazineResponse;
 
+    private String volume;
+
+    private String number;
+
+    private String type;
+
+    private java.util.Map<String, Object> metadata;
+
+    private IssuerResponse issuer;
+
+    private String createdAt;
+
 }

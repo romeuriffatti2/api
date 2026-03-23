@@ -9,8 +9,8 @@
         .certificate-page { width: 297mm; height: 210mm; padding: 15mm 20mm; box-sizing: border-box; background-color: #fff; position: relative; page-break-after: always; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .certificate-page:last-child { page-break-after: auto; }
         .header { text-align: center; margin-bottom: 10mm; margin-top: 25mm; }
-        .header h1 { font-size: 32pt; margin: 0; color: #000; text-transform: uppercase; letter-spacing: 3pt; font-weight: bold; }
-        .content { text-align: center; max-width: 90%; font-size: 16pt; line-height: 1.6; margin-bottom: 10mm; }
+        .header h1 { font-size: 20pt; margin: 0; color: #000; text-transform: uppercase; letter-spacing: 2pt; font-weight: bold; }
+        .content { text-align: justify; max-width: 90%; font-size: 14pt; line-height: 1.6; margin-bottom: 10mm; text-align-last: center; }
         .footer { position: absolute; bottom: 15mm; left: 20mm; right: 20mm; font-size: 10pt; color: #777; width: calc(100% - 40mm); }
         .footer-table { display: table; width: 100%; }
         .footer-left { display: table-cell; text-align: left; width: 50%; vertical-align: bottom; }
@@ -26,13 +26,13 @@
             se este certificado é válido. Código de validação: <span th:text="${cert.validationCode}">UUID-CODE</span>
         </div>
         <div class="header">
-            <h1>Certificado</h1>
+            <h1>Declaração Ad Hoc</h1>
         </div>
         <div th:if="${logoBase64 != null}" style="text-align: center; margin-top: 10px; margin-bottom: 15px;">
             <img th:src="'data:image/png;base64,' + ${logoBase64}" style="max-height: 80px; width: auto;" />
         </div>
         <div class="content">
-            Certificamos, para os devidos fins, que <strong th:text="${cert.name}">Nome do Participante</strong> participou e concluiu com sucesso as atividades relacionadas à revista <strong th:text="${cert.magazine.name}">Nome da Revista</strong>, registrada sob o ISSN <strong th:text="${cert.magazine.issn}">0000-0000</strong>.
+            A revista <strong th:text="${cert.magazine.name}">Nome da Revista</strong> declara para os devidos fins, que <strong th:text="${cert.name}">Nome do Participante</strong> desempenhou a função de parecerista AD HOC, no volume <strong th:text="${cert.volume}">6</strong>, número <strong th:text="${cert.number}">7</strong>, ID da avaliação <strong th:text="${cert.metadata != null ? cert.metadata.get('evaluationId') : ''}"></strong>, de <strong th:text="${#temporals.format(cert.createdAt, 'yyyy')}">2025</strong>.
         </div>
         <div class="signatures-area">
             ____________________________________<br/>

@@ -32,6 +32,8 @@ public class Magazine {
     @Email
     private String email;
 
+    private String cnpj;
+
     @CreationTimestamp
     private Timestamp created_at;
 
