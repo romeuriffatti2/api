@@ -1,28 +1,115 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8" />
     <title>Certificado</title>
     <style>
-        @page { size: A4 landscape; margin: 0; }
-        body { margin: 0; padding: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: #333; }
-        .certificate-page { width: 297mm; height: 210mm; padding: 15mm 20mm; box-sizing: border-box; background-color: #fff; position: relative; page-break-after: always; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .certificate-page:last-child { page-break-after: auto; }
-        .header { text-align: center; margin-bottom: 10mm; margin-top: 25mm; }
-        .header h1 { font-size: 20pt; margin: 0; color: #000; text-transform: uppercase; letter-spacing: 2pt; font-weight: bold; }
-        .content { text-align: justify; max-width: 90%; font-size: 14pt; line-height: 1.6; margin-bottom: 10mm; text-align-last: center; }
-        .footer { position: absolute; bottom: 15mm; left: 20mm; right: 20mm; font-size: 10pt; color: #777; width: calc(100% - 40mm); }
-        .footer-table { display: table; width: 100%; }
-        .footer-left { display: table-cell; text-align: left; width: 50%; vertical-align: bottom; }
-        .footer-right { display: table-cell; text-align: right; width: 50%; vertical-align: bottom; }
-        .validation-top { position: absolute; top: 10mm; right: 20mm; font-size: 9pt; color: #aaa; text-align: right; }
-        .signatures-area { margin-top: 15mm; text-align: center; font-size: 12pt; line-height: 1.4; }
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+        }
+
+        .certificate-page {
+            width: 297mm;
+            height: 210mm;
+            padding: 15mm 20mm;
+            box-sizing: border-box;
+            background-color: #fff;
+            position: relative;
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .certificate-page:last-child {
+            page-break-after: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10mm;
+            margin-top: 25mm;
+        }
+
+        .header h1 {
+            font-size: 20pt;
+            margin: 0;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 2pt;
+            font-weight: bold;
+        }
+
+        .content {
+            text-align: justify;
+            max-width: 90%;
+            font-size: 14pt;
+            line-height: 1.6;
+            margin-bottom: 10mm;
+            text-align-last: center;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 15mm;
+            left: 20mm;
+            right: 20mm;
+            font-size: 10pt;
+            color: #777;
+            width: calc(100% - 40mm);
+        }
+
+        .footer-table {
+            display: table;
+            width: 100%;
+        }
+
+        .footer-left {
+            display: table-cell;
+            text-align: left;
+            width: 50%;
+            vertical-align: bottom;
+        }
+
+        .footer-right {
+            display: table-cell;
+            text-align: right;
+            width: 50%;
+            vertical-align: bottom;
+        }
+
+        .validation-top {
+            position: absolute;
+            top: 10mm;
+            right: 20mm;
+            font-size: 9pt;
+            color: #aaa;
+            text-align: right;
+        }
+
+        .signatures-area {
+            margin-top: 15mm;
+            text-align: center;
+            font-size: 12pt;
+            line-height: 1.4;
+        }
     </style>
 </head>
+
 <body>
     <div th:each="cert : ${certificates}" class="certificate-page">
         <div class="validation-top">
-            Acesse https://doity.com.br/validar-certificado para verificar<br/>
+            Acesse https://doity.com.br/validar-certificado para verificar<br />
             se este certificado é válido. Código de validação: <span th:text="${cert.validationCode}">UUID-CODE</span>
         </div>
         <div class="header">
@@ -32,14 +119,23 @@
             <img th:src="'data:image/png;base64,' + ${logoBase64}" style="max-height: 80px; width: auto;" />
         </div>
         <div class="content">
-            A <strong th:text="${cert.magazine.name}">Nome da Revista</strong>, ISSN <span th:text="${cert.magazine.issn}">0000-0000</span> (Online), vinculada ao Centro de Estudos Interdisciplinares (CEEINTER), declara, para os devidos fins, que <strong th:text="${cert.name}">Nome Completo</strong>, portador(a) do CPF <strong th:text="${cert.metadata != null ? cert.metadata.get('cpf') : ''}"></strong>, atua como membro voluntário do Corpo Editorial do periódico desde <strong th:text="${cert.metadata != null ? cert.metadata.get('startDate') : ''}"></strong>, a <strong th:text="${cert.metadata != null ? cert.metadata.get('endDate') : ''}"></strong>, contribuindo de forma significativa para o fortalecimento das atividades editoriais e científicas da revista.
+            A <strong th:text="${cert.magazine.name}">Nome da Revista</strong>, ISSN <span
+                th:text="${cert.magazine.issn}">0000-0000</span> (Online), vinculada ao Centro de Estudos
+            Interdisciplinares (CEEINTER), declara, para os devidos fins, que <strong th:text="${cert.name}">Nome
+                Completo</strong>, portador(a) do CPF <strong
+                th:text="${cert.metadata != null ? cert.metadata.get('cpf') : ''}"></strong>, atua como membro
+            voluntário do Corpo Editorial do periódico desde <strong
+                th:text="${cert.metadata != null ? cert.metadata.get('startDate') : ''}"></strong>, a <strong
+                th:text="${cert.metadata != null ? cert.metadata.get('endDate') : ''}"></strong>, contribuindo de forma
+            significativa para o fortalecimento das atividades editoriais e científicas da revista.
         </div>
         <div class="signatures-area">
-            ____________________________________<br/>
-            Me. Ewerton da Silva Ferreira<br/>
-            Editor Chefe da <span th:text="${cert.magazine.name}">Revista de Estudos Interdisciplinares</span><br/>
-            ISSN <span th:text="${cert.magazine.issn}">2674-8703</span><br/>
-            E-mail: <span th:text="${cert.magazine.email != null ? cert.magazine.email : 'ceeinter01@gmail.com'}">ceeinter01@gmail.com</span>
+            ____________________________________<br />
+            Me. Ewerton da Silva Ferreira<br />
+            Editor Chefe da <span th:text="${cert.magazine.name}">Revista de Estudos Interdisciplinares</span><br />
+            ISSN <span th:text="${cert.magazine.issn}">2674-8703</span><br />
+            E-mail: <span
+                th:text="${cert.magazine.email != null ? cert.magazine.email : 'ceeinter01@gmail.com'}">ceeinter01@gmail.com</span>
         </div>
         <div class="footer">
             <div class="footer-table">
@@ -47,11 +143,12 @@
                     Florianópolis, <span th:text="${#temporals.format(cert.createdAt, 'dd/MM/yyyy')}"></span>
                 </div>
                 <div class="footer-right">
-                    Responsável pela Emissão: Centro de Estudos Interdisciplinares LTDA<br/>
+                    Responsável pela Emissão: Centro de Estudos Interdisciplinares LTDA<br />
                     CNPJ <span th:text="${cert.magazine?.cnpj ?: '30.704.187/0001-75'}"></span>
                 </div>
             </div>
         </div>
     </div>
 </body>
+
 </html>
