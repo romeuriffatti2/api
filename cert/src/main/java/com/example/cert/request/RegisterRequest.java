@@ -1,5 +1,6 @@
 package com.example.cert.request;
 
+import com.example.cert.domain.UserRole;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
@@ -12,4 +13,7 @@ public class RegisterRequest {
     private String email;
     private String password;
     private LocalDate birthDate;
+    /** Role do usuário criado. Padrão: CLIENT. */
+    private UserRole role;
 }
+

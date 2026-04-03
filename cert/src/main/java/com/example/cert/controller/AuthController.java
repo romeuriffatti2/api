@@ -1,6 +1,8 @@
 package com.example.cert.controller;
 
 import com.example.cert.Response.JwtResponse;
+import com.example.cert.domain.Usuario;
+import com.example.cert.repository.UserRepository;
 import com.example.cert.request.LoginRequest;
 import com.example.cert.request.RegisterRequest;
 import com.example.cert.security.JwtTokenProvider;
@@ -19,12 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @AllArgsConstructor
-@CrossOrigin(origins = "*") // Added for frontend access
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private AuthenticationManager authenticationManager;
     private JwtTokenProvider tokenProvider;
     private com.example.cert.service.UserService userService;
+    private UserRepository userRepository;
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
@@ -35,9 +38,16 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
 
-            return ResponseEntity.ok(new JwtResponse(jwt, loginRequest.getEmail()));
+            // Busca a role do usuário para incluir na resposta (evita o frontend ter que decodificar o JWT)
+            String role = userRepository.findByEmail(loginRequest.getEmail())
+                    .map(Usuario::getRole)
+                    .map(Enum::name)
+                    .orElse("CLIENT");
+
+            return ResponseEntity.ok(new JwtResponse(jwt, loginRequest.getEmail(), role));
         } catch (org.springframework.security.core.AuthenticationException e) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).body(java.util.Collections.singletonMap("error", "E-mail ou senha inválidos"));
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                    .body(java.util.Collections.singletonMap("error", "E-mail ou senha inválidos"));
         }
     }
 

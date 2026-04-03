@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,11 +21,13 @@ public class CertificateController {
     private CertificateService certificateService;
 
     @GetMapping("/list")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
     public Page<CertificateResponse> getAllCertificates(Pageable pageable) {
         return certificateService.getAllCertificates(pageable);
     }
 
     @PostMapping("/generate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
     public ResponseEntity<byte[]> createCertificate(@RequestBody CertificateRequest certificateRequest) {
         byte[] pdf = certificateService.create(certificateRequest);
 

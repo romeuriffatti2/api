@@ -18,10 +18,24 @@ spring:
     init:
       mode: always
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 app:
   jwt:
     secret: ${JWT_SECRET:defaultSecretKeyForDevelopmentPurposesOnly123456}
     expiration-ms: ${JWT_EXPIRATION:86400000}
+  upload:
+    dir: ${UPLOAD_DIR:uploads}
 
 server:
   port: ${SERVER_PORT:8080}

@@ -28,8 +28,8 @@ public class CertificateService {
     private final CertificateRepository certificateRepository;
     private final CertificateMapper certificateMapper;
     private final MagazineRepository magazineRepository;
-
     private final GeneratePdfService generatePdfService;
+    private final CertificateEmailService certificateEmailService;
 
     public Page<CertificateResponse> getAllCertificates(Pageable pageable) {
         return certificateRepository
@@ -50,7 +50,12 @@ public class CertificateService {
             savedCertificates.add(certificateRepository.save(certificate));
         });
 
-        return generatePdfService.generatePdf(savedCertificates);
+        byte[] pdfBytes = generatePdfService.generatePdf(savedCertificates);
+
+        // Dispara envio de e-mail em background (não bloqueia o download do usuário)
+        certificateEmailService.sendBatch(savedCertificates, pdfBytes);
+
+        return pdfBytes;
     }
 
 

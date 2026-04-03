@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -43,10 +44,38 @@ public class Certificate {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private java.util.Map<String, Object> metadata;
+    private Map<String, Object> metadata;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issuer_id")
     private Issuer issuer;
+
+    /**
+     * Destinatário do certificado. Substituirá gradualmente o campo "name" legado.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id")
+    private Person person;
+
+    /**
+     * E-mail do destinatário, copiado para facilitar o envio sem JOIN na Person.
+     */
+    private String recipientEmail;
+
+    /**
+     * Status do ciclo de vida do certificado em relação ao envio de e-mail.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    @Builder.Default
+    private CertificateStatus status = CertificateStatus.GENERATED;
+
+    /**
+     * Template utilizado para gerar este certificado.
+     * Mantém rastreabilidade histórica do design usado.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id")
+    private CertificateTemplate template;
 
 }
