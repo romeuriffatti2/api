@@ -36,33 +36,16 @@ public class Usuario {
 
     private LocalDate birthDate;
 
-    /**
-     * Role do usuário na plataforma.
-     * ADMIN: gerencia a plataforma (notícias, eventos, revistas, usuários).
-     * CLIENT: responsável por uma ou mais revistas parceiras.
-     */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private UserRole role = UserRole.CLIENT;
 
-    /**
-     * Revistas às quais este usuário está vinculado.
-     * Um usuário pode ser dono de múltiplas revistas.
-     */
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "user_magazine",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "magazine_id")
-    )
+    @JoinTable(name = "user_magazine", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "magazine_id"))
     @Builder.Default
     private Set<Magazine> magazines = new HashSet<>();
 
-    /**
-     * Templates de certificado pertencentes a este usuário.
-     * Criados automaticamente no onboarding a partir dos templates padrão do sistema.
-     */
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CertificateTemplate> templates;
 

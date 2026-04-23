@@ -13,7 +13,5 @@ public class RegisterRequest {
     private String email;
     private String password;
     private LocalDate birthDate;
-    /** Role do usuário criado. Padrão: CLIENT. */
     private UserRole role;
 }
-

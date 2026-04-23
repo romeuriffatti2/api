@@ -42,8 +42,8 @@ public class UserService {
 
         Usuario savedUser = userRepository.save(user);
 
-        // Clona os templates padrão do sistema para o novo usuário CLIENT
-        if (savedUser.getRole() == UserRole.CLIENT) {
+        // Clona os templates padrão do sistema para o novo usuário CLIENT ou ADMIN
+        if (savedUser.getRole() == UserRole.CLIENT || savedUser.getRole() == UserRole.ADMIN) {
             cloneSystemTemplatesForUser(savedUser);
         }
 
@@ -54,7 +54,7 @@ public class UserService {
      * Clona todos os templates padrão do sistema (systemDefault=true) para o usuário dado.
      * Cada cópia registra o sourceTemplateId, permitindo reset futuro ao padrão.
      */
-    private void cloneSystemTemplatesForUser(Usuario newUser) {
+    public void registerUserTemplates(Usuario newUser) {
         List<CertificateTemplate> systemDefaults = templateRepository.findBySystemDefaultTrue();
 
         if (systemDefaults.isEmpty()) {
