@@ -45,7 +45,7 @@ public class CertificateService {
         List<Certificate> savedCertificates = new ArrayList<>();
         certificateRequest.getCertificates().forEach(item -> {
             Certificate certificate = CertificateMapper.toEntity(
-                item, magazine, certificateRequest.getVolume(), certificateRequest.getNumber(), null, certificateRequest.getType()
+                item, magazine, certificateRequest.getVolume(), certificateRequest.getNumber(), certificateRequest.getType()
             );
             savedCertificates.add(certificateRepository.save(certificate));
         });

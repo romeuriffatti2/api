@@ -12,8 +12,6 @@ public class MagazineResponse {
 
     private String name;
 
-    private String isbn;
-
     private String issn;
 
     private String email;

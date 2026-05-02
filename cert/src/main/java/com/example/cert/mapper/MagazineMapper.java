@@ -14,7 +14,6 @@ public class MagazineMapper {
         return MagazineResponse.builder()
                 .id(magazine.getId())
                 .name(magazine.getName())
-                .isbn(magazine.getIsbn())
                 .issn(magazine.getIssn())
                 .email(magazine.getEmail())
                 .cnpj(magazine.getCnpj())
@@ -24,7 +23,6 @@ public class MagazineMapper {
     public static Magazine toEntity(MagazineRequest request) {
         return Magazine.builder()
                 .name(request.getName())
-                .isbn(request.getIsbn())
                 .issn(request.getIssn())
                 .email(request.getEmail())
                 .cnpj(request.getCnpj())

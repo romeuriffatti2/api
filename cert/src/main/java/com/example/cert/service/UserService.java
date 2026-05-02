@@ -44,7 +44,7 @@ public class UserService {
 
         // Clona os templates padrão do sistema para o novo usuário CLIENT ou ADMIN
         if (savedUser.getRole() == UserRole.CLIENT || savedUser.getRole() == UserRole.ADMIN) {
-            cloneSystemTemplatesForUser(savedUser);
+            registerUserTemplates(savedUser);
         }
 
         return userMapper.toResponse(savedUser);

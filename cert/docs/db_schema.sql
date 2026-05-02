@@ -43,11 +43,6 @@ CREATE TABLE IF NOT EXISTS user_magazine (
     CONSTRAINT fk_user_magazine_magazine FOREIGN KEY (magazine_id) REFERENCES magazine(id) ON DELETE CASCADE
 );
 
--- 5. Tabela de Emissores (Responsáveis pela assinatura)
-CREATE TABLE IF NOT EXISTS issuer (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255)
-);
 
 -- 6. Tabela de Templates de Certificado (PDFME)
 CREATE TABLE IF NOT EXISTS certificate_template (
@@ -56,6 +51,7 @@ CREATE TABLE IF NOT EXISTS certificate_template (
     type VARCHAR(50) NOT NULL,
     system_default BOOLEAN DEFAULT FALSE,
     active BOOLEAN DEFAULT TRUE,
+    issuer_name VARCHAR(255),
     json_schema TEXT NOT NULL,
     owner_id BIGINT,
     source_template_id BIGINT,
@@ -70,7 +66,6 @@ CREATE TABLE IF NOT EXISTS certificate (
     name VARCHAR(255),
     validation_code UUID DEFAULT gen_random_uuid(),
     magazine_id BIGINT NOT NULL,
-    issuer_id BIGINT,
     person_id BIGINT,
     template_id BIGINT,
     volume VARCHAR(50),
@@ -81,7 +76,6 @@ CREATE TABLE IF NOT EXISTS certificate (
     metadata JSONB,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_certificate_magazine FOREIGN KEY (magazine_id) REFERENCES magazine(id),
-    CONSTRAINT fk_certificate_issuer FOREIGN KEY (issuer_id) REFERENCES issuer(id),
     CONSTRAINT fk_certificate_person FOREIGN KEY (person_id) REFERENCES person(id),
     CONSTRAINT fk_certificate_template FOREIGN KEY (template_id) REFERENCES certificate_template(id)
 );

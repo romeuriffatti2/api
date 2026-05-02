@@ -29,8 +29,6 @@ public class CertificateResponse {
 
     private java.util.Map<String, Object> metadata;
 
-    private IssuerResponse issuer;
-
     private String createdAt;
 
 }

@@ -48,6 +48,9 @@ public class CertificateTemplate {
     @Builder.Default
     private boolean active = true;
 
+    @Column(name = "issuer_name")
+    private String issuerName;
+
     /**
      * JSON Schema do PDFME: { basePdf: "base64...", schemas: [...] }
      * Armazena o design visual completo do certificado.

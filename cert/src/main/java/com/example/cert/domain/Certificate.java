@@ -46,10 +46,6 @@ public class Certificate {
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> metadata;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "issuer_id")
-    private Issuer issuer;
-
     /**
      * Destinatário do certificado. Substituirá gradualmente o campo "name" legado.
      */

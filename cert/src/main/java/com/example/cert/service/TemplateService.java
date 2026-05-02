@@ -26,6 +26,7 @@ public class TemplateService {
         return TemplateResponse.builder()
                 .id(t.getId())
                 .name(t.getName())
+                .issuerName(t.getIssuerName())
                 .type(t.getType())
                 .systemDefault(t.isSystemDefault())
                 .sourceTemplateId(t.getSourceTemplateId())
@@ -62,6 +63,9 @@ public class TemplateService {
         if (req.getName() != null && !req.getName().isBlank()) {
             template.setName(req.getName());
         }
+        if (req.getIssuerName() != null) {
+            template.setIssuerName(req.getIssuerName());
+        }
         if (req.getJsonSchema() != null && !req.getJsonSchema().isBlank()) {
             template.setJsonSchema(req.getJsonSchema());
         }
@@ -73,6 +77,7 @@ public class TemplateService {
     public TemplateResponse create(SaveTemplateRequest req, Usuario owner) {
         CertificateTemplate template = CertificateTemplate.builder()
                 .name(req.getName())
+                .issuerName(req.getIssuerName())
                 .type("custom")
                 .jsonSchema(req.getJsonSchema())
                 .systemDefault(false)
@@ -92,6 +97,7 @@ public class TemplateService {
 
         CertificateTemplate copy = CertificateTemplate.builder()
                 .name(original.getName() + " (cópia)")
+                .issuerName(original.getIssuerName())
                 .type(original.getType())
                 .jsonSchema(original.getJsonSchema())
                 .systemDefault(false)

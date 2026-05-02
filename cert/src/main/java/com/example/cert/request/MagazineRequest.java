@@ -11,8 +11,6 @@ public class MagazineRequest {
 
     private String name;
 
-    private String isbn;
-
     private String issn;
 
     private String email;

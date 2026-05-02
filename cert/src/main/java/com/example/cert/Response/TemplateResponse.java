@@ -11,6 +11,7 @@ public class TemplateResponse {
 
     private Long id;
     private String name;
+    private String issuerName;
     private String type;
     private boolean systemDefault;
     private Long sourceTemplateId;
