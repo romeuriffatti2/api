@@ -11,6 +11,8 @@ public class MagazineRequest {
 
     private String name;
 
+    private String responsavelTecnico;
+
     private String issn;
 
     private String email;

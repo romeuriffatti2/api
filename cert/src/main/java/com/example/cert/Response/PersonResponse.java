@@ -1,22 +1,17 @@
 package com.example.cert.Response;
 
-
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class MagazineResponse {
+public class PersonResponse {
 
     private Long id;
 
     private String name;
 
-    private String responsavelTecnico;
-
-    private String issn;
-
     private String email;
 
-    private String cnpj;
+    private String cpf;
 }

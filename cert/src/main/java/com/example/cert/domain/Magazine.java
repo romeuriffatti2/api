@@ -25,6 +25,8 @@ public class Magazine {
 
     private String name;
 
+    private String responsavelTecnico;
+
     private String issn;
 
     @Email
