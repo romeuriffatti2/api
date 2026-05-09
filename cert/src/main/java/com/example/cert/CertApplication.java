@@ -3,10 +3,7 @@ package com.example.cert;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.EnableAsync;
-import com.example.cert.repository.MagazineRepository;
 
 @SpringBootApplication
 @EnableAsync
@@ -27,17 +24,5 @@ public class CertApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(CertApplication.class, args);
-	}
-
-	@Bean
-	public CommandLineRunner initMockCnpj(MagazineRepository magazineRepository) {
-		return args -> {
-			magazineRepository.findAll().forEach(magazine -> {
-				if (magazine.getCnpj() == null || magazine.getCnpj().isEmpty()) {
-					magazine.setCnpj("00.000.000/0000-00");
-					magazineRepository.save(magazine);
-				}
-			});
-		};
 	}
 }

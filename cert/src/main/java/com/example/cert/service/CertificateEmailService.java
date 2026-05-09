@@ -5,7 +5,6 @@ import com.example.cert.domain.CertificateStatus;
 import com.example.cert.repository.CertificateRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -64,7 +63,8 @@ public class CertificateEmailService {
         try {
             File pdfFile = new File(storagePath, certificate.getValidationCode().toString() + ".pdf");
             if (!pdfFile.exists()) {
-                log.error("Arquivo PDF não encontrado para o certificado id={}: {}", certificate.getId(), pdfFile.getAbsolutePath());
+                log.error("Arquivo PDF não encontrado para o certificado id={}: {}", certificate.getId(),
+                        pdfFile.getAbsolutePath());
                 return;
             }
 
@@ -86,12 +86,14 @@ public class CertificateEmailService {
         } catch (MessagingException e) {
             certificate.setStatus(CertificateStatus.EMAIL_FAILED);
             certificateRepository.save(certificate);
-            log.error("Falha ao enviar e-mail para {} (certificado id={}): {}", recipient, certificate.getId(), e.getMessage());
+            log.error("Falha ao enviar e-mail para {} (certificado id={}): {}", recipient, certificate.getId(),
+                    e.getMessage());
         }
     }
 
     /**
-     * Resolve o e-mail do destinatário: prioriza recipientEmail (campo desnormalizado),
+     * Resolve o e-mail do destinatário: prioriza recipientEmail (campo
+     * desnormalizado),
      * depois cai para person.email se existir.
      */
     private String resolveRecipient(Certificate certificate) {
@@ -127,7 +129,6 @@ public class CertificateEmailService {
                 </html>
                 """.formatted(
                 name != null ? name : "Prezado(a)",
-                certificate.getValidationCode() != null ? certificate.getValidationCode().toString() : ""
-        );
+                certificate.getValidationCode() != null ? certificate.getValidationCode().toString() : "");
     }
 }

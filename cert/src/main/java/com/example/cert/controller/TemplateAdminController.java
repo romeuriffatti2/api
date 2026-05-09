@@ -2,7 +2,8 @@ package com.example.cert.controller;
 
 import com.example.cert.Response.TemplateResponse;
 import com.example.cert.request.SaveTemplateRequest;
-import com.example.cert.service.TemplateService;
+import com.example.cert.service.templates.TemplateService;
+
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class TemplateAdminController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public TemplateResponse updateSystemTemplate(@PathVariable Long id,
-                                                  @RequestBody SaveTemplateRequest req) {
+            @RequestBody SaveTemplateRequest req) {
         return templateService.updateSystemTemplate(id, req);
     }
 }

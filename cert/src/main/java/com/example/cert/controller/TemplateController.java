@@ -4,7 +4,8 @@ import com.example.cert.Response.TemplateResponse;
 import com.example.cert.domain.Usuario;
 import com.example.cert.repository.UserRepository;
 import com.example.cert.request.SaveTemplateRequest;
-import com.example.cert.service.TemplateService;
+import com.example.cert.service.templates.TemplateService;
+
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

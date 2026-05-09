@@ -2,20 +2,19 @@ package com.example.cert.service;
 
 import com.example.cert.Exceptions.UserAlreadyExistsException;
 import com.example.cert.Response.UserResponse;
-import com.example.cert.domain.CertificateTemplate;
 import com.example.cert.domain.UserRole;
 import com.example.cert.domain.Usuario;
 import com.example.cert.mapper.UserMapper;
-import com.example.cert.repository.CertificateTemplateRepository;
 import com.example.cert.repository.UserRepository;
 import com.example.cert.request.RegisterRequest;
+import com.example.cert.service.templates.InitializeTemplatesService;
+import com.example.cert.service.templates.TemplateService;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -25,12 +24,9 @@ public class UserService {
     private UserRepository userRepository;
     private UserMapper userMapper;
     private PasswordEncoder passwordEncoder;
-    private CertificateTemplateRepository templateRepository;
+    private final InitializeTemplatesService initializeTemplatesService;
+    private final TemplateService templateService;
 
-    /**
-     * Registra um novo usuário. Se a role for CLIENT, clona automaticamente
-     * todos os templates padrão do sistema para o novo usuário (onboarding).
-     */
     @Transactional
     public UserResponse registerUser(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -42,46 +38,12 @@ public class UserService {
 
         Usuario savedUser = userRepository.save(user);
 
-        // Clona os templates padrão do sistema para o novo usuário CLIENT ou ADMIN
-        if (savedUser.getRole() == UserRole.CLIENT || savedUser.getRole() == UserRole.ADMIN) {
-            registerUserTemplates(savedUser);
-        }
+        initializeTemplatesService.initializeSystemTemplates();
 
+        if (savedUser.getRole() == UserRole.CLIENT || savedUser.getRole() == UserRole.ADMIN) {
+            templateService.cloneTemplatesForUser(savedUser);
+        }
         return userMapper.toResponse(savedUser);
     }
 
-    /**
-     * Clona todos os templates padrão do sistema (systemDefault=true) para o usuário dado.
-     * Cada cópia registra o sourceTemplateId, permitindo reset futuro ao padrão.
-     */
-    public void registerUserTemplates(Usuario newUser) {
-        List<CertificateTemplate> systemDefaults = templateRepository.findBySystemDefaultTrue();
-
-        if (systemDefaults.isEmpty()) {
-            log.warn("Nenhum template padrão do sistema encontrado durante o onboarding do usuário {}. " +
-                    "Execute o DataInitializer primeiro.", newUser.getEmail());
-            return;
-        }
-
-        systemDefaults.forEach(template -> {
-            // Verifica se o usuário já tem um template clonado deste padrão para evitar duplicatas
-            boolean alreadyHas = templateRepository.findByOwner(newUser).stream()
-                    .anyMatch(t -> template.getId().equals(t.getSourceTemplateId()));
-
-            if (!alreadyHas) {
-                CertificateTemplate userCopy = CertificateTemplate.builder()
-                        .name(template.getName())
-                        .type(template.getType())
-                        .jsonSchema(template.getJsonSchema())
-                        .systemDefault(false)
-                        .active(true)
-                        .sourceTemplateId(template.getId())  // referência para reset
-                        .owner(newUser)
-                        .build();
-                templateRepository.save(userCopy);
-            }
-        });
-
-        log.info("Clonados {} templates para o novo usuário {}.", systemDefaults.size(), newUser.getEmail());
-    }
 }

@@ -1,16 +1,13 @@
 package com.example.cert.controller;
 
 import com.example.cert.Response.TemplateResponse;
-import com.example.cert.service.TemplateService;
+import com.example.cert.service.templates.TemplateService;
+
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Endpoint público para leitura dos templates padrão do sistema.
- * Clientes podem ver (mas não editar) os templates padrão para usar como referência.
- */
 @RestController
 @RequestMapping("/api/system/templates")
 @AllArgsConstructor
