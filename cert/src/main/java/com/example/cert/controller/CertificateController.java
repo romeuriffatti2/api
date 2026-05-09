@@ -28,16 +28,9 @@ public class CertificateController {
 
     @PostMapping("/generate")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
-    public ResponseEntity<byte[]> createCertificate(@RequestBody CertificateRequest certificateRequest) {
-        byte[] pdf = certificateService.create(certificateRequest);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "certificados.pdf");
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(pdf);
+    public ResponseEntity<Void> createCertificate(@RequestBody CertificateRequest certificateRequest) {
+        certificateService.create(certificateRequest);
+        return ResponseEntity.ok().build();
     }
     @GetMapping("/validate/{code}")
     public ResponseEntity<CertificateResponse> validateCertificate(@PathVariable("code") String code) {

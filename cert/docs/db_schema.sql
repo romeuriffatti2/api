@@ -1,6 +1,3 @@
--- Script de Criação do Banco de Dados (PostgreSQL)
--- Gerado a partir das entidades JPA mapeadas no sistema
-
 -- 1. Tabela de Pessoas (Destinatários)
 CREATE TABLE IF NOT EXISTS person (
     id BIGSERIAL PRIMARY KEY,
@@ -26,9 +23,9 @@ CREATE TABLE IF NOT EXISTS usuario (
 CREATE TABLE IF NOT EXISTS magazine (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255),
-    isbn VARCHAR(50),
     issn VARCHAR(50),
     email VARCHAR(255),
+	responsavel_tecnico VARCHAR(255),
     cnpj VARCHAR(20),
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -79,10 +76,3 @@ CREATE TABLE IF NOT EXISTS certificate (
     CONSTRAINT fk_certificate_person FOREIGN KEY (person_id) REFERENCES person(id),
     CONSTRAINT fk_certificate_template FOREIGN KEY (template_id) REFERENCES certificate_template(id)
 );
-
--- Comentários sobre os relacionamentos:
--- - Usuario <-> Magazine: ManyToMany via user_magazine
--- - Usuario <-> CertificateTemplate: OneToMany (um usuário é dono de seus templates)
--- - Magazine <-> Certificate: OneToMany (uma revista emite múltiplos certificados)
--- - Person <-> Certificate: OneToMany (uma pessoa pode ter vários certificados)
--- - CertificateTemplate <-> Certificate: ManyToOne (um certificado usa um template histórico)

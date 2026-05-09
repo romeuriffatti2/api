@@ -8,7 +8,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}
+      ddl-auto: ${DDL_AUTO:validate}
     show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
@@ -36,6 +36,9 @@ app:
     expiration-ms: ${JWT_EXPIRATION:86400000}
   upload:
     dir: ${UPLOAD_DIR:uploads}
+  certificate:
+    storage:
+      path: ${CERT_STORAGE_PATH:uploads/certificates/}
 
 server:
   port: ${SERVER_PORT:8080}

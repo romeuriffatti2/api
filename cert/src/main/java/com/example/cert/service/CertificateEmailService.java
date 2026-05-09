@@ -7,12 +7,14 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -20,49 +22,59 @@ import java.util.List;
  * <p>
  * Responsabilidade única: enviar o certificado por e-mail e atualizar o status
  * de cada Certificate para EMAIL_SENT ou EMAIL_FAILED.
- * <p>
- * Usa @Async para não bloquear a thread HTTP da geração. O usuário recebe o download
- * imediatamente e o e-mail é disparado em background.
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class CertificateEmailService {
 
     private final JavaMailSender mailSender;
     private final CertificateRepository certificateRepository;
+    private final String storagePath;
+
+    public CertificateEmailService(
+            JavaMailSender mailSender,
+            CertificateRepository certificateRepository,
+            @Value("${app.certificate.storage.path}") String storagePath) {
+        this.mailSender = mailSender;
+        this.certificateRepository = certificateRepository;
+        this.storagePath = storagePath;
+    }
 
     /**
-     * Envia o PDF gerado para os destinatários de um lote de certificados.
-     * Chamado após a geração do PDF para não bloquear o download do usuário.
+     * Envia o PDF salvo no disco para os destinatários de um lote de certificados.
      *
      * @param certificates lista de certificados gerados no batch
-     * @param pdfBytes     bytes do PDF a ser enviado como anexo
      */
     @Async
-    public void sendBatch(List<Certificate> certificates, byte[] pdfBytes) {
+    public void sendBatch(List<Certificate> certificates) {
         for (Certificate certificate : certificates) {
             String recipient = resolveRecipient(certificate);
             if (recipient == null || recipient.isBlank()) {
                 log.warn("Certificado id={} sem e-mail de destinatário. Skipping.", certificate.getId());
                 continue;
             }
-            send(certificate, recipient, pdfBytes);
+            send(certificate, recipient);
         }
     }
 
     /**
      * Envia o e-mail para um único certificado e persiste o novo status.
      */
-    private void send(Certificate certificate, String recipient, byte[] pdfBytes) {
+    private void send(Certificate certificate, String recipient) {
         try {
+            File pdfFile = new File(storagePath, certificate.getValidationCode().toString() + ".pdf");
+            if (!pdfFile.exists()) {
+                log.error("Arquivo PDF não encontrado para o certificado id={}: {}", certificate.getId(), pdfFile.getAbsolutePath());
+                return;
+            }
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(recipient);
             helper.setSubject("Seu certificado está disponível");
             helper.setText(buildEmailBody(certificate), true);
-            helper.addAttachment("certificado.pdf", new ByteArrayResource(pdfBytes), "application/pdf");
+            helper.addAttachment("certificado.pdf", new FileSystemResource(pdfFile));
 
             mailSender.send(message);
 

@@ -64,16 +64,22 @@ public class UserService {
         }
 
         systemDefaults.forEach(template -> {
-            CertificateTemplate userCopy = CertificateTemplate.builder()
-                    .name(template.getName())
-                    .type(template.getType())
-                    .jsonSchema(template.getJsonSchema())
-                    .systemDefault(false)
-                    .active(true)
-                    .sourceTemplateId(template.getId())  // referência para reset
-                    .owner(newUser)
-                    .build();
-            templateRepository.save(userCopy);
+            // Verifica se o usuário já tem um template clonado deste padrão para evitar duplicatas
+            boolean alreadyHas = templateRepository.findByOwner(newUser).stream()
+                    .anyMatch(t -> template.getId().equals(t.getSourceTemplateId()));
+
+            if (!alreadyHas) {
+                CertificateTemplate userCopy = CertificateTemplate.builder()
+                        .name(template.getName())
+                        .type(template.getType())
+                        .jsonSchema(template.getJsonSchema())
+                        .systemDefault(false)
+                        .active(true)
+                        .sourceTemplateId(template.getId())  // referência para reset
+                        .owner(newUser)
+                        .build();
+                templateRepository.save(userCopy);
+            }
         });
 
         log.info("Clonados {} templates para o novo usuário {}.", systemDefaults.size(), newUser.getEmail());

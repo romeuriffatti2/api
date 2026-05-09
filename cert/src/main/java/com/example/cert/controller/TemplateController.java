@@ -6,7 +6,6 @@ import com.example.cert.repository.UserRepository;
 import com.example.cert.request.SaveTemplateRequest;
 import com.example.cert.service.TemplateService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,6 +44,13 @@ public class TemplateController {
         return templateService.getMyTemplateById(id, resolveUser(principal));
     }
 
+    @GetMapping("/type/{type}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    public TemplateResponse getByType(@PathVariable String type,
+            @AuthenticationPrincipal UserDetails principal) {
+        return templateService.getMyTemplateByType(type, resolveUser(principal));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
     public TemplateResponse save(@PathVariable Long id,
@@ -65,14 +71,6 @@ public class TemplateController {
     public TemplateResponse clone(@PathVariable Long id,
             @AuthenticationPrincipal UserDetails principal) {
         return templateService.cloneMyTemplate(id, resolveUser(principal));
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Long id,
-            @AuthenticationPrincipal UserDetails principal) {
-        templateService.deleteMyTemplate(id, resolveUser(principal));
-        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/reset-to-default")

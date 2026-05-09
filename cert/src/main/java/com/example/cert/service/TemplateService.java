@@ -54,6 +54,19 @@ public class TemplateService {
         return toResponse(template);
     }
 
+    @Transactional(readOnly = true)
+    public TemplateResponse getMyTemplateByType(String type, Usuario owner) {
+        CertificateTemplate template = templateRepository.findByOwner(owner).stream()
+                .filter(t -> type.equals(t.getType()))
+                .findFirst()
+                .orElseGet(() -> templateRepository.findBySystemDefaultTrue().stream()
+                        .filter(t -> type.equals(t.getType()))
+                        .findFirst()
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Template não encontrado para o tipo: " + type)));
+        return toResponse(template);
+    }
+
     @Transactional
     public TemplateResponse update(Long id, SaveTemplateRequest req, Usuario owner) {
         CertificateTemplate template = templateRepository.findByIdAndOwner(id, owner)
@@ -109,19 +122,7 @@ public class TemplateService {
         return toResponse(templateRepository.save(copy));
     }
 
-    @Transactional
-    public void deleteMyTemplate(Long id, Usuario owner) {
-        CertificateTemplate template = templateRepository.findByIdAndOwner(id, owner)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Template não encontrado ou sem permissão"));
 
-        if (template.getSourceTemplateId() == null) {
-            throw new BusinessException("Templates criados do zero não podem ser deletados diretamente. " +
-                    "Desative-o ou entre em contato com o suporte.");
-        }
-
-        templateRepository.delete(template);
-    }
 
     @Transactional
     public TemplateResponse resetToDefault(Long id, Usuario owner) {

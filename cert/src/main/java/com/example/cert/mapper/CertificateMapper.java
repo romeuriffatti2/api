@@ -37,6 +37,7 @@ public class CertificateMapper {
                 .number(number)
                 .type(type)
                 .metadata(itemRequest.getMetadata())
+                .recipientEmail(itemRequest.getEmail())
                 .build();
     }
 

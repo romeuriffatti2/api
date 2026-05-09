@@ -9,6 +9,9 @@ import java.util.UUID;
 @Setter
 public class CertificateItemRequest {
     private String name;
+    private String email;
+    private Long personId;
     private UUID validationCode;
+    private String pdfBase64;
     private java.util.Map<String, Object> metadata;
 }
