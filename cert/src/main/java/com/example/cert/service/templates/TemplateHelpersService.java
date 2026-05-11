@@ -115,7 +115,7 @@ public class TemplateHelpersService {
         validationField(240, 10),
         logoField(123.5, 30),
         signatureField(73.5, 145,
-            "____________________________________\\nMe. Ewerton da Silva Ferreira\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
+            "____________________________________\\n{{responsavelTecnico}}\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
         footerLeftField(20, 190),
         footerRightField(177, 185));
   }
@@ -155,7 +155,7 @@ public class TemplateHelpersService {
         validationField(240, 10),
         logoField(123.5, 25),
         signatureField(73.5, 160,
-            "____________________________________\\nMe. Ewerton da Silva Ferreira\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
+            "____________________________________\\n{{responsavelTecnico}}\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
         footerLeftField(20, 190),
         footerRightField(177, 185));
   }
@@ -195,7 +195,7 @@ public class TemplateHelpersService {
         validationField(240, 10),
         logoField(123.5, 25),
         signatureField(73.5, 155,
-            "____________________________________\\nMe. Ewerton da Silva Ferreira\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
+            "____________________________________\\n{{responsavelTecnico}}\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
         footerLeftField(20, 190),
         footerRightField(177, 185));
   }
@@ -235,7 +235,7 @@ public class TemplateHelpersService {
         validationField(240, 10),
         logoField(123.5, 25),
         signatureField(73.5, 155,
-            "____________________________________\\nMe. Ewerton da Silva Ferreira\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
+            "____________________________________\\n{{responsavelTecnico}}\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
         footerLeftField(20, 190),
         footerRightField(177, 185));
   }
@@ -275,7 +275,7 @@ public class TemplateHelpersService {
         validationField(240, 10),
         logoField(123.5, 25),
         signatureField(73.5, 160,
-            "____________________________________\\nMe. Ewerton da Silva Ferreira\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
+            "____________________________________\\n{{responsavelTecnico}}\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
         footerLeftField(20, 190),
         footerRightField(177, 185));
   }
@@ -315,7 +315,7 @@ public class TemplateHelpersService {
         validationField(240, 10),
         logoField(123.5, 25),
         signatureField(73.5, 160,
-            "____________________________________\\nMe. Ewerton da Silva Ferreira\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
+            "____________________________________\\n{{responsavelTecnico}}\\nEditor Chefe da {{magazineName}}\\nISSN {{issn}} | {{email}}"),
         footerLeftField(20, 190),
         footerRightField(177, 185));
   }
