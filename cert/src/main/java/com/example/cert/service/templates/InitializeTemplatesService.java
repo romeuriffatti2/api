@@ -17,14 +17,19 @@ public class InitializeTemplatesService {
 
                 templateService.saveOrUpdateTemplate("Certificado de Participação", "participacao",
                                 helpersService.buildParticipacaoSchema());
+
                 templateService.saveOrUpdateTemplate("Certificado de Publicação", "publicacao",
                                 helpersService.buildPublicacaoSchema());
+
                 templateService.saveOrUpdateTemplate("Declaração Ad Hoc (Parecerista)", "parecerista",
                                 helpersService.buildPareceristSchema());
+
                 templateService.saveOrUpdateTemplate("Declaração de Corpo Editorial", "corpo-editorial",
                                 helpersService.buildEditorialSchema());
+
                 templateService.saveOrUpdateTemplate("Declaração de Dossiê Temático", "dossie",
                                 helpersService.buildDossieSchema());
+
                 templateService.saveOrUpdateTemplate("Declaração de Aceite de Artigo", "aceite",
                                 helpersService.buildAceiteSchema());
 
