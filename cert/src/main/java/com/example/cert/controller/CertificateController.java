@@ -37,6 +37,13 @@ public class CertificateController {
         return ResponseEntity.ok(certificateService.validateCertificate(code));
     }
 
+    @PostMapping("/resend/{code}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
+    public ResponseEntity<Void> resendCertificate(@PathVariable("code") String code) {
+        certificateService.resendEmail(code);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/download/{code}")
     public ResponseEntity<byte[]> downloadCertificate(@PathVariable("code") String code) {
         byte[] pdf = certificateService.downloadCertificate(code);

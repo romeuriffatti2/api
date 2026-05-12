@@ -2,9 +2,11 @@ package com.example.cert.service;
 
 import com.example.cert.Response.CertificateResponse;
 import com.example.cert.domain.Certificate;
+import com.example.cert.domain.CertificateTemplate;
 import com.example.cert.domain.Magazine;
 import com.example.cert.mapper.CertificateMapper;
 import com.example.cert.repository.CertificateRepository;
+import com.example.cert.repository.CertificateTemplateRepository;
 import com.example.cert.repository.MagazineRepository;
 import com.example.cert.request.CertificateRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +32,7 @@ public class CertificateService {
     private final CertificateRepository certificateRepository;
     private final CertificateMapper certificateMapper;
     private final MagazineRepository magazineRepository;
+    private final CertificateTemplateRepository certificateTemplateRepository;
     private final CertificateEmailService certificateEmailService;
     private final String storagePath;
 
@@ -37,14 +40,16 @@ public class CertificateService {
             CertificateRepository certificateRepository,
             CertificateMapper certificateMapper,
             MagazineRepository magazineRepository,
+            CertificateTemplateRepository certificateTemplateRepository,
             CertificateEmailService certificateEmailService,
             @Value("${app.certificate.storage.path}") String storagePath) {
         this.certificateRepository = certificateRepository;
         this.certificateMapper = certificateMapper;
         this.magazineRepository = magazineRepository;
+        this.certificateTemplateRepository = certificateTemplateRepository;
         this.certificateEmailService = certificateEmailService;
         this.storagePath = storagePath;
-        
+
         // Garante que o diretório de armazenamento existe
         try {
             Files.createDirectories(Paths.get(storagePath));
@@ -65,21 +70,25 @@ public class CertificateService {
         Magazine magazine = magazineRepository.findById(certificateRequest.getMagazineId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Revista não encontrada"));
 
+        final CertificateTemplate template = certificateRequest.getTemplateId() != null
+                ? certificateTemplateRepository.findById(certificateRequest.getTemplateId()).orElse(null)
+                : null;
+
         List<Certificate> savedCertificates = new ArrayList<>();
-        
+
         certificateRequest.getCertificates().forEach(item -> {
             Certificate certificate = CertificateMapper.toEntity(
-                item, magazine, certificateRequest.getVolume(), certificateRequest.getNumber(), certificateRequest.getType()
-            );
-            
+                    item, magazine, certificateRequest.getVolume(), certificateRequest.getNumber(),
+                    certificateRequest.getType(), template);
+
             // Salva a entidade para gerar o ID e garantir consistência
             Certificate saved = certificateRepository.save(certificate);
-            
+
             // Decodifica e salva o PDF no disco
             if (item.getPdfBase64() != null && !item.getPdfBase64().isBlank()) {
                 savePdfToDisk(saved.getValidationCode(), item.getPdfBase64());
             }
-            
+
             savedCertificates.add(saved);
         });
 
@@ -97,6 +106,13 @@ public class CertificateService {
         }
     }
 
+    @Transactional
+    public void resendEmail(String code) {
+        Certificate certificate = certificateRepository.findByValidationCode(UUID.fromString(code))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Certificado não encontrado"));
+        certificateEmailService.resend(certificate);
+    }
+
     @Transactional(readOnly = true)
     public CertificateResponse validateCertificate(String code) {
         return certificateRepository.findByValidationCode(UUID.fromString(code))
@@ -109,7 +125,8 @@ public class CertificateService {
         try {
             Path filePath = Paths.get(storagePath, code + ".pdf");
             if (!Files.exists(filePath)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo do certificado não encontrado no disco");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Arquivo do certificado não encontrado no disco");
             }
             return Files.readAllBytes(filePath);
         } catch (IOException e) {

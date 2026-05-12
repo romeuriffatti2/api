@@ -57,6 +57,19 @@ public class CertificateEmailService {
     }
 
     /**
+     * Tenta reenviar o certificado para o destinatário associado.
+     */
+    @Async
+    public void resend(Certificate certificate) {
+        String recipient = resolveRecipient(certificate);
+        if (recipient == null || recipient.isBlank()) {
+            log.warn("Certificado id={} sem e-mail de destinatário. Não é possível reenviar.", certificate.getId());
+            return;
+        }
+        send(certificate, recipient);
+    }
+
+    /**
      * Envia o e-mail para um único certificado e persiste o novo status.
      */
     private void send(Certificate certificate, String recipient) {

@@ -27,7 +27,7 @@ public class CertificateMapper {
                 .build();
     }
 
-    public static Certificate toEntity(CertificateItemRequest itemRequest, Magazine magazine, String volume, String number, String type) {
+    public static Certificate toEntity(CertificateItemRequest itemRequest, Magazine magazine, String volume, String number, String type, com.example.cert.domain.CertificateTemplate template) {
 
         return Certificate.builder()
                 .name(itemRequest.getName())
@@ -38,6 +38,7 @@ public class CertificateMapper {
                 .type(type)
                 .metadata(itemRequest.getMetadata())
                 .recipientEmail(itemRequest.getEmail())
+                .template(template)
                 .build();
     }
 

@@ -18,4 +18,6 @@ public class CertificateRequest {
     private String volume;
 
     private String number;
+
+    private Long templateId;
 }
