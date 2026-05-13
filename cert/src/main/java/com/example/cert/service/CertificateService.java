@@ -1,6 +1,8 @@
 package com.example.cert.service;
 
 import com.example.cert.Response.CertificateResponse;
+import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 import com.example.cert.domain.Certificate;
 import com.example.cert.domain.CertificateTemplate;
 import com.example.cert.domain.Magazine;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class CertificateService {
 
     private final CertificateRepository certificateRepository;
@@ -34,22 +37,11 @@ public class CertificateService {
     private final MagazineRepository magazineRepository;
     private final CertificateTemplateRepository certificateTemplateRepository;
     private final CertificateEmailService certificateEmailService;
-    private final String storagePath;
+    @Value("${app.certificate.storage.path}")
+    private String storagePath;
 
-    public CertificateService(
-            CertificateRepository certificateRepository,
-            CertificateMapper certificateMapper,
-            MagazineRepository magazineRepository,
-            CertificateTemplateRepository certificateTemplateRepository,
-            CertificateEmailService certificateEmailService,
-            @Value("${app.certificate.storage.path}") String storagePath) {
-        this.certificateRepository = certificateRepository;
-        this.certificateMapper = certificateMapper;
-        this.magazineRepository = magazineRepository;
-        this.certificateTemplateRepository = certificateTemplateRepository;
-        this.certificateEmailService = certificateEmailService;
-        this.storagePath = storagePath;
-
+    @PostConstruct
+    public void init() {
         // Garante que o diretório de armazenamento existe
         try {
             Files.createDirectories(Paths.get(storagePath));
@@ -59,9 +51,7 @@ public class CertificateService {
     }
 
     public Page<CertificateResponse> getAllCertificates(Pageable pageable) {
-        return certificateRepository
-                .findAll(pageable)
-                .map(certificateMapper::toResponse);
+        return certificateRepository.findAll(pageable).map(certificateMapper::toResponse);
     }
 
     @Transactional
