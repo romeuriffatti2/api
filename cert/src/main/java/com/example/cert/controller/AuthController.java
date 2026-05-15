@@ -12,7 +12,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @AllArgsConstructor
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private AuthenticationManager authenticationManager;
@@ -38,7 +36,8 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
 
-            // Busca a role do usuário para incluir na resposta (evita o frontend ter que decodificar o JWT)
+            // Busca a role do usuário para incluir na resposta (evita o frontend ter que
+            // decodificar o JWT)
             String role = userRepository.findByEmail(loginRequest.getEmail())
                     .map(Usuario::getRole)
                     .map(Enum::name)

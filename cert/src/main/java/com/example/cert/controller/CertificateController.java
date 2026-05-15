@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/certificate")
 @AllArgsConstructor
-@CrossOrigin(origins = "*") // Added for frontend access
 public class CertificateController {
 
     private CertificateService certificateService;
@@ -32,6 +31,7 @@ public class CertificateController {
         certificateService.create(certificateRequest);
         return ResponseEntity.ok().build();
     }
+
     @GetMapping("/validate/{code}")
     public ResponseEntity<CertificateResponse> validateCertificate(@PathVariable("code") String code) {
         return ResponseEntity.ok(certificateService.validateCertificate(code));
