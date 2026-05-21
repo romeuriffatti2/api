@@ -43,7 +43,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/register").hasRole("ADMIN")
                         .requestMatchers("/api/certificate/validate/**", "/api/certificate/download/**").permitAll()
                         .requestMatchers("/api/certificates/validate/**", "/api/certificates/download/**").permitAll()
                         .requestMatchers("/api/certificates/search").permitAll()

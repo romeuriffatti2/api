@@ -8,7 +8,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: ${DDL_AUTO:validate}
+      ddl-auto: ${DDL_AUTO:update}
     show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
@@ -42,3 +42,12 @@ app:
 
 server:
   port: ${SERVER_PORT:8080}
+
+admin:
+  seed:
+    email: ${ADMIN_EMAIL:admin@admin.com}
+    password: ${ADMIN_PASSWORD:Admin@1234}
+    name: ${ADMIN_NAME:Administrador}
+  
+cors:
+  allowed-origins: http://localhost:4200
