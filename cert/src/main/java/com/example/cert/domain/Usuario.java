@@ -46,9 +46,6 @@ public class Usuario {
     @Builder.Default
     private Set<Magazine> magazines = new HashSet<>();
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CertificateTemplate> templates;
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 

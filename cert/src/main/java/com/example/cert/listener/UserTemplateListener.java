@@ -51,11 +51,7 @@ public class UserTemplateListener {
     @EventListener
     public void onUserCreated(UserCreatedEvent event) {
         Usuario usuario = event.getUsuario();
-
-        if (usuario.getRole() == UserRole.CLIENT || usuario.getRole() == UserRole.ADMIN) {
-            log.info("UserTemplateListener: clonando templates para o usuário '{}' com role '{}'.",
-                    usuario.getEmail(), usuario.getRole());
-            templateService.cloneTemplatesForUser(usuario);
-        }
+        log.info("UserTemplateListener: usuário '{}' criado. Templates serão clonados automaticamente ao cadastrar uma revista.",
+                usuario.getEmail());
     }
 }

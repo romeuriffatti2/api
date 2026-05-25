@@ -2,11 +2,14 @@ package com.example.cert.service;
 
 import com.example.cert.Response.MagazineResponse;
 import com.example.cert.domain.Magazine;
+import com.example.cert.domain.Usuario;
 import com.example.cert.mapper.MagazineMapper;
 import com.example.cert.repository.MagazineRepository;
 import com.example.cert.request.MagazineRequest;
+import com.example.cert.service.templates.TemplateService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,21 +18,27 @@ import java.util.List;
 public class MagazineService {
 
     private final MagazineRepository magazineRepository;
+    private final TemplateService templateService;
 
-    public List<MagazineResponse> getAllMagazines() {
+    public List<MagazineResponse> getMyMagazines(Usuario owner) {
         return magazineRepository
-                .findAll()
+                .findByOwner(owner)
                 .stream()
                 .map(MagazineMapper::toResponse)
                 .toList();
     }
 
-    public MagazineResponse postMagazine(MagazineRequest magazineRequest) {
+    @Transactional
+    public MagazineResponse postMagazine(MagazineRequest magazineRequest, Usuario owner) {
 
         Magazine magazine = MagazineMapper.toEntity(magazineRequest);
+        magazine.setOwner(owner);
 
-        magazineRepository.save(magazine);
+        Magazine saved = magazineRepository.save(magazine);
 
-        return MagazineMapper.toResponse(magazine);
+        // Clona os templates padrões do sistema diretamente vinculados a esta nova revista
+        templateService.cloneTemplatesForMagazine(saved);
+
+        return MagazineMapper.toResponse(saved);
     }
 }

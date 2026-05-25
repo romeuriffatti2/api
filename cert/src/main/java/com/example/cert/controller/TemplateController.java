@@ -10,19 +10,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 /**
- * Endpoints para o usuário logado gerenciar seus próprios templates.
- * Acessível por CLIENT e ADMIN (cada um vê apenas os seus).
+ * Endpoints para o usuário gerenciar os templates associados às suas revistas.
+ * Acessível por CLIENT e ADMIN.
  */
 @RestController
 @RequestMapping("/api/my/templates")
@@ -37,52 +31,54 @@ public class TemplateController {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 
-    @GetMapping
+    @GetMapping("/magazine/{magazineId}")
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    public List<TemplateResponse> listMyTemplates(@AuthenticationPrincipal UserDetails principal) {
-        return templateService.listMyTemplates(resolveUser(principal));
-    }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    public TemplateResponse getById(@PathVariable Long id,
+    public List<TemplateResponse> listTemplatesByMagazine(@PathVariable Long magazineId,
             @AuthenticationPrincipal UserDetails principal) {
-        return templateService.getMyTemplateById(id, resolveUser(principal));
+        return templateService.listTemplatesByMagazine(magazineId, resolveUser(principal));
     }
 
-    @GetMapping("/type/{type}")
+    @GetMapping("/magazine/{magazineId}/{id}")
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    public TemplateResponse getByType(@PathVariable String type,
+    public TemplateResponse getById(@PathVariable Long magazineId, @PathVariable Long id,
             @AuthenticationPrincipal UserDetails principal) {
-        return templateService.getMyTemplateByType(type, resolveUser(principal));
+        return templateService.getTemplateByIdAndMagazine(id, magazineId, resolveUser(principal));
     }
 
-    @PutMapping("/{id}")
+    @GetMapping("/magazine/{magazineId}/type/{type}")
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    public TemplateResponse save(@PathVariable Long id,
+    public TemplateResponse getByType(@PathVariable Long magazineId, @PathVariable String type,
+            @AuthenticationPrincipal UserDetails principal) {
+        return templateService.getTemplateByTypeAndMagazine(type, magazineId, resolveUser(principal));
+    }
+
+    @PutMapping("/magazine/{magazineId}/{id}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    public TemplateResponse save(@PathVariable Long magazineId, @PathVariable Long id,
             @RequestBody SaveTemplateRequest req,
             @AuthenticationPrincipal UserDetails principal) {
-        return templateService.update(id, req, resolveUser(principal));
+        return templateService.update(id, magazineId, req, resolveUser(principal));
     }
 
-    @PostMapping
+    @PostMapping("/magazine/{magazineId}")
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    public TemplateResponse create(@RequestBody SaveTemplateRequest req,
+    public TemplateResponse create(@PathVariable Long magazineId,
+            @RequestBody SaveTemplateRequest req,
             @AuthenticationPrincipal UserDetails principal) {
-        return templateService.create(req, resolveUser(principal));
+        return templateService.create(magazineId, req, resolveUser(principal));
     }
 
-    @PostMapping("/{id}/clone")
+    @PostMapping("/magazine/{magazineId}/{id}/clone")
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    public TemplateResponse clone(@PathVariable Long id,
+    public TemplateResponse clone(@PathVariable Long magazineId, @PathVariable Long id,
             @AuthenticationPrincipal UserDetails principal) {
-        return templateService.cloneMyTemplate(id, resolveUser(principal));
+        return templateService.cloneTemplate(id, magazineId, resolveUser(principal));
     }
 
-    @PostMapping("/{id}/reset-to-default")
+    @PostMapping("/magazine/{magazineId}/{id}/reset-to-default")
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    public TemplateResponse resetToDefault(@PathVariable Long id,
+    public TemplateResponse resetToDefault(@PathVariable Long magazineId, @PathVariable Long id,
             @AuthenticationPrincipal UserDetails principal) {
-        return templateService.resetToDefault(id, resolveUser(principal));
+        return templateService.resetToDefault(id, magazineId, resolveUser(principal));
     }
 }

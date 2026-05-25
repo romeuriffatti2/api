@@ -42,8 +42,8 @@ public class CertificateTemplate {
     private String jsonSchema;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = true)
-    private Usuario owner;
+    @JoinColumn(name = "magazine_id", nullable = true)
+    private Magazine magazine;
 
     @Column(name = "source_template_id")
     private Long sourceTemplateId;

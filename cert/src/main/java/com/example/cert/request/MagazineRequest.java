@@ -18,4 +18,6 @@ public class MagazineRequest {
     private String email;
 
     private String cnpj;
+
+    private String emailPassword;
 }

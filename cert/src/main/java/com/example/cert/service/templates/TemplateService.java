@@ -3,8 +3,10 @@ package com.example.cert.service.templates;
 import com.example.cert.Exceptions.BusinessException;
 import com.example.cert.Response.TemplateResponse;
 import com.example.cert.domain.CertificateTemplate;
+import com.example.cert.domain.Magazine;
 import com.example.cert.domain.Usuario;
 import com.example.cert.repository.CertificateTemplateRepository;
+import com.example.cert.repository.MagazineRepository;
 import com.example.cert.request.SaveTemplateRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,28 +23,28 @@ import java.util.List;
 public class TemplateService {
 
   private final CertificateTemplateRepository templateRepository;
+  private final MagazineRepository magazineRepository;
 
+  /**
+   * Clona todos os templates padrões do sistema para uma nova revista
+   */
   @Transactional
-  public void cloneTemplatesForUser(Usuario newUser) {
+  public void cloneTemplatesForMagazine(Magazine newMagazine) {
     List<CertificateTemplate> systemDefaults = templateRepository.findBySystemDefaultTrue();
 
     systemDefaults.forEach(template -> {
-      boolean alreadyHas = templateRepository.findByOwner(newUser).stream()
-          .anyMatch(t -> template.getId().equals(t.getSourceTemplateId()));
-
-      if (!alreadyHas) {
-        CertificateTemplate userCopy = CertificateTemplate.builder()
-            .name(template.getName())
-            .type(template.getType())
-            .jsonSchema(template.getJsonSchema())
-            .systemDefault(false)
-            .active(true)
-            .sourceTemplateId(template.getId())
-            .owner(newUser)
-            .build();
-        templateRepository.save(userCopy);
-      }
+      CertificateTemplate magazineCopy = CertificateTemplate.builder()
+          .name(template.getName())
+          .type(template.getType())
+          .jsonSchema(template.getJsonSchema())
+          .systemDefault(false)
+          .active(true)
+          .sourceTemplateId(template.getId())
+          .magazine(newMagazine)
+          .build();
+      templateRepository.save(magazineCopy);
     });
+    log.info("Templates base clonados para a revista id={}", newMagazine.getId());
   }
 
   public void saveOrUpdateTemplate(String name, String type, String jsonSchema) {
@@ -61,7 +63,7 @@ public class TemplateService {
                   .jsonSchema(jsonSchema)
                   .systemDefault(true)
                   .active(true)
-                  .owner(null)
+                  .magazine(null)
                   .sourceTemplateId(null)
                   .build();
               templateRepository.save(t);
@@ -82,22 +84,31 @@ public class TemplateService {
         .build();
   }
 
-  @Transactional(readOnly = true)
-  public List<TemplateResponse> listMyTemplates(Usuario owner) {
-    return templateRepository.findByOwner(owner).stream().map(this::toResponse).toList();
+  private Magazine resolveAndValidateMagazine(Long magazineId, Usuario owner) {
+    return magazineRepository.findByIdAndOwner(magazineId, owner)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Revista não encontrada ou sem permissão de acesso"));
   }
 
   @Transactional(readOnly = true)
-  public TemplateResponse getMyTemplateById(Long id, Usuario owner) {
-    CertificateTemplate template = templateRepository.findByIdAndOwner(id, owner)
+  public List<TemplateResponse> listTemplatesByMagazine(Long magazineId, Usuario owner) {
+    Magazine magazine = resolveAndValidateMagazine(magazineId, owner);
+    return templateRepository.findByMagazine(magazine).stream().map(this::toResponse).toList();
+  }
+
+  @Transactional(readOnly = true)
+  public TemplateResponse getTemplateByIdAndMagazine(Long id, Long magazineId, Usuario owner) {
+    Magazine magazine = resolveAndValidateMagazine(magazineId, owner);
+    CertificateTemplate template = templateRepository.findByIdAndMagazine(id, magazine)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND, "Template não encontrado ou sem permissão"));
     return toResponse(template);
   }
 
   @Transactional(readOnly = true)
-  public TemplateResponse getMyTemplateByType(String type, Usuario owner) {
-    CertificateTemplate template = templateRepository.findByOwner(owner).stream()
+  public TemplateResponse getTemplateByTypeAndMagazine(String type, Long magazineId, Usuario owner) {
+    Magazine magazine = resolveAndValidateMagazine(magazineId, owner);
+    CertificateTemplate template = templateRepository.findByMagazine(magazine).stream()
         .filter(t -> type.equals(t.getType()))
         .findFirst()
         .orElseGet(() -> templateRepository.findBySystemDefaultTrue().stream()
@@ -109,8 +120,9 @@ public class TemplateService {
   }
 
   @Transactional
-  public TemplateResponse update(Long id, SaveTemplateRequest req, Usuario owner) {
-    CertificateTemplate template = templateRepository.findByIdAndOwner(id, owner)
+  public TemplateResponse update(Long id, Long magazineId, SaveTemplateRequest req, Usuario owner) {
+    Magazine magazine = resolveAndValidateMagazine(magazineId, owner);
+    CertificateTemplate template = templateRepository.findByIdAndMagazine(id, magazine)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND, "Template não encontrado ou sem permissão"));
 
@@ -127,7 +139,8 @@ public class TemplateService {
   }
 
   @Transactional
-  public TemplateResponse create(SaveTemplateRequest req, Usuario owner) {
+  public TemplateResponse create(Long magazineId, SaveTemplateRequest req, Usuario owner) {
+    Magazine magazine = resolveAndValidateMagazine(magazineId, owner);
     CertificateTemplate template = CertificateTemplate.builder()
         .name(req.getName())
         .issuerName(req.getIssuerName())
@@ -135,15 +148,16 @@ public class TemplateService {
         .jsonSchema(req.getJsonSchema())
         .systemDefault(false)
         .active(true)
-        .owner(owner)
+        .magazine(magazine)
         .sourceTemplateId(null)
         .build();
     return toResponse(templateRepository.save(template));
   }
 
   @Transactional
-  public TemplateResponse cloneMyTemplate(Long id, Usuario owner) {
-    CertificateTemplate original = templateRepository.findByIdAndOwner(id, owner)
+  public TemplateResponse cloneTemplate(Long id, Long magazineId, Usuario owner) {
+    Magazine magazine = resolveAndValidateMagazine(magazineId, owner);
+    CertificateTemplate original = templateRepository.findByIdAndMagazine(id, magazine)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND, "Template não encontrado ou sem permissão"));
 
@@ -154,29 +168,30 @@ public class TemplateService {
         .jsonSchema(original.getJsonSchema())
         .systemDefault(false)
         .active(true)
-        .owner(owner)
+        .magazine(magazine)
         .sourceTemplateId(original.getSourceTemplateId())
         .build();
     return toResponse(templateRepository.save(copy));
   }
 
   @Transactional
-  public TemplateResponse resetToDefault(Long id, Usuario owner) {
-    CertificateTemplate userTemplate = templateRepository.findByIdAndOwner(id, owner)
+  public TemplateResponse resetToDefault(Long id, Long magazineId, Usuario owner) {
+    Magazine magazine = resolveAndValidateMagazine(magazineId, owner);
+    CertificateTemplate magazineTemplate = templateRepository.findByIdAndMagazine(id, magazine)
         .orElseThrow(() -> new BusinessException("Template não encontrado ou sem permissão"));
 
-    if (userTemplate.getSourceTemplateId() == null) {
+    if (magazineTemplate.getSourceTemplateId() == null) {
       throw new BusinessException("Este template não possui um padrão de origem para reset.");
     }
 
     CertificateTemplate sourceTemplate = templateRepository
-        .findById(userTemplate.getSourceTemplateId())
+        .findById(magazineTemplate.getSourceTemplateId())
         .orElseThrow(() -> new BusinessException("Template padrão de origem não encontrado."));
 
-    userTemplate.setJsonSchema(sourceTemplate.getJsonSchema());
-    userTemplate.setName(sourceTemplate.getName());
+    magazineTemplate.setJsonSchema(sourceTemplate.getJsonSchema());
+    magazineTemplate.setName(sourceTemplate.getName());
 
-    return toResponse(templateRepository.save(userTemplate));
+    return toResponse(templateRepository.save(magazineTemplate));
   }
 
   @Transactional(readOnly = true)

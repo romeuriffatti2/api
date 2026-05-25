@@ -1,9 +1,6 @@
 package com.example.cert.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -33,6 +30,13 @@ public class Magazine {
     private String email;
 
     private String cnpj;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private Usuario owner;
+
+    @Column(name = "email_password", nullable = false)
+    private String emailPassword;
 
     @CreationTimestamp
     private Timestamp created_at;

@@ -19,4 +19,6 @@ public class MagazineResponse {
     private String email;
 
     private String cnpj;
+
+    private String emailPassword;
 }

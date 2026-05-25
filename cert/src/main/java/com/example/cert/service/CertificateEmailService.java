@@ -2,47 +2,66 @@ package com.example.cert.service;
 
 import com.example.cert.domain.Certificate;
 import com.example.cert.domain.CertificateStatus;
+import com.example.cert.domain.Magazine;
 import com.example.cert.repository.CertificateRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.List;
+import java.util.Properties;
 
 /**
- * Sprint 2 — Serviço de disparo de e-mail com PDF em anexo.
- * <p>
- * Responsabilidade única: enviar o certificado por e-mail e atualizar o status
- * de cada Certificate para EMAIL_SENT ou EMAIL_FAILED.
+ * Serviço de disparo de e-mail com PDF em anexo e SMTP dinâmico por Revista.
  */
 @Slf4j
 @Service
 public class CertificateEmailService {
 
-    private final JavaMailSender mailSender;
     private final CertificateRepository certificateRepository;
     private final String storagePath;
 
     public CertificateEmailService(
-            JavaMailSender mailSender,
             CertificateRepository certificateRepository,
-            @Value("${app.certificate.storage.path}") String storagePath) {
-        this.mailSender = mailSender;
+            @org.springframework.beans.factory.annotation.Value("${app.certificate.storage.path}") String storagePath) {
         this.certificateRepository = certificateRepository;
         this.storagePath = storagePath;
     }
 
     /**
+     * Instancia dinamicamente o JavaMailSender com as credenciais SMTP da revista associada.
+     */
+    private JavaMailSender getMailSenderForMagazine(Magazine magazine) {
+        if (magazine.getEmail() == null || magazine.getEmailPassword() == null || magazine.getEmailPassword().isBlank()) {
+            throw new IllegalStateException("A revista '" + magazine.getName() + "' não possui credenciais SMTP (e-mail e senha) cadastradas.");
+        }
+
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost("smtp.gmail.com"); // padrão Google SMTP
+        mailSender.setPort(587);
+        mailSender.setUsername(magazine.getEmail());
+        mailSender.setPassword(magazine.getEmailPassword());
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.required", "true");
+        props.put("mail.smtp.connectiontimeout", "5000");
+        props.put("mail.smtp.timeout", "5000");
+        props.put("mail.smtp.writetimeout", "5000");
+
+        return mailSender;
+    }
+
+    /**
      * Envia o PDF salvo no disco para os destinatários de um lote de certificados.
-     *
-     * @param certificates lista de certificados gerados no batch
      */
     @Async
     public void sendBatch(List<Certificate> certificates) {
@@ -81,22 +100,31 @@ public class CertificateEmailService {
                 return;
             }
 
-            MimeMessage message = mailSender.createMimeMessage();
+            Magazine magazine = certificate.getMagazine();
+            if (magazine == null) {
+                throw new IllegalStateException("O certificado id=" + certificate.getId() + " não possui revista associada.");
+            }
+
+            // Instancia o MailSender dinâmico da revista
+            JavaMailSender dynamicMailSender = getMailSenderForMagazine(magazine);
+
+            MimeMessage message = dynamicMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            helper.setFrom(magazine.getEmail()); // O remetente passa a ser o e-mail da própria revista
             helper.setTo(recipient);
-            helper.setSubject("Seu certificado está disponível");
+            helper.setSubject("Seu certificado da revista " + magazine.getName() + " está disponível");
             helper.setText(buildEmailBody(certificate), true);
             helper.addAttachment("certificado.pdf", new FileSystemResource(pdfFile));
 
-            mailSender.send(message);
+            dynamicMailSender.send(message);
 
             certificate.setStatus(CertificateStatus.EMAIL_SENT);
             certificateRepository.save(certificate);
 
-            log.info("E-mail enviado com sucesso para {} (certificado id={})", recipient, certificate.getId());
+            log.info("E-mail enviado com sucesso de {} para {} (certificado id={})", magazine.getEmail(), recipient, certificate.getId());
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             certificate.setStatus(CertificateStatus.EMAIL_FAILED);
             certificateRepository.save(certificate);
             log.error("Falha ao enviar e-mail para {} (certificado id={}): {}", recipient, certificate.getId(),
@@ -105,9 +133,7 @@ public class CertificateEmailService {
     }
 
     /**
-     * Resolve o e-mail do destinatário: prioriza recipientEmail (campo
-     * desnormalizado),
-     * depois cai para person.email se existir.
+     * Resolve o e-mail do destinatário.
      */
     private String resolveRecipient(Certificate certificate) {
         if (certificate.getRecipientEmail() != null && !certificate.getRecipientEmail().isBlank()) {
@@ -120,28 +146,32 @@ public class CertificateEmailService {
     }
 
     /**
-     * Template HTML simples do corpo do e-mail.
-     * Na Sprint 3, isso pode ser substituído por um template Thymeleaf.
+     * Template HTML do corpo do e-mail.
      */
     private String buildEmailBody(Certificate certificate) {
         String name = certificate.getPerson() != null
                 ? certificate.getPerson().getName()
                 : certificate.getName();
+        String magazineName = certificate.getMagazine() != null
+                ? certificate.getMagazine().getName()
+                : "Revista";
 
         return """
                 <html>
                   <body style="font-family: Arial, sans-serif; color: #333;">
                     <h2>Certificado emitido</h2>
                     <p>Olá, <strong>%s</strong>!</p>
-                    <p>Seu certificado foi emitido com sucesso. Você pode encontrá-lo em anexo neste e-mail.</p>
-                    <p>Para validar a autenticidade do seu certificado, acesse o link abaixo e insira o código:</p>
+                    <p>Seu certificado relacionado à revista <strong>%s</strong> foi emitido com sucesso e está em anexo.</p>
+                    <p>Para validar a autenticidade do seu certificado, acesse o link de validação e insira o código:</p>
                     <p><strong>%s</strong></p>
                     <br>
-                    <p>Atenciosamente,<br>Equipe da Plataforma</p>
+                    <p>Atenciosamente,<br>Equipe da %s</p>
                   </body>
                 </html>
                 """.formatted(
                 name != null ? name : "Prezado(a)",
-                certificate.getValidationCode() != null ? certificate.getValidationCode().toString() : "");
+                magazineName,
+                certificate.getValidationCode() != null ? certificate.getValidationCode().toString() : "",
+                magazineName);
     }
 }
