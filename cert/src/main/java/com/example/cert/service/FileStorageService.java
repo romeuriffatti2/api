@@ -28,7 +28,7 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
-    private static final long MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    private static final long MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
     private static final List<String> ALLOWED_TYPES = Arrays.asList(
             "image/jpeg", "image/png", "image/webp", "image/gif"
     );
@@ -94,7 +94,7 @@ public class FileStorageService {
             throw new IllegalArgumentException("Arquivo está vazio.");
         }
         if (file.getSize() > MAX_SIZE_BYTES) {
-            throw new IllegalArgumentException("Arquivo excede o tamanho máximo de 5 MB.");
+            throw new IllegalArgumentException("Arquivo excede o tamanho máximo de 2 MB.");
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {

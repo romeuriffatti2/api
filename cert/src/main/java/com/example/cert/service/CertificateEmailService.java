@@ -4,7 +4,6 @@ import com.example.cert.domain.Certificate;
 import com.example.cert.domain.CertificateStatus;
 import com.example.cert.domain.Magazine;
 import com.example.cert.repository.CertificateRepository;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
@@ -36,11 +35,14 @@ public class CertificateEmailService {
     }
 
     /**
-     * Instancia dinamicamente o JavaMailSender com as credenciais SMTP da revista associada.
+     * Instancia dinamicamente o JavaMailSender com as credenciais SMTP da revista
+     * associada.
      */
     private JavaMailSender getMailSenderForMagazine(Magazine magazine) {
-        if (magazine.getEmail() == null || magazine.getEmailPassword() == null || magazine.getEmailPassword().isBlank()) {
-            throw new IllegalStateException("A revista '" + magazine.getName() + "' não possui credenciais SMTP (e-mail e senha) cadastradas.");
+        if (magazine.getEmail() == null || magazine.getEmailPassword() == null
+                || magazine.getEmailPassword().isBlank()) {
+            throw new IllegalStateException(
+                    "A revista '" + magazine.getName() + "' não possui credenciais SMTP (e-mail e senha) cadastradas.");
         }
 
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
@@ -102,7 +104,8 @@ public class CertificateEmailService {
 
             Magazine magazine = certificate.getMagazine();
             if (magazine == null) {
-                throw new IllegalStateException("O certificado id=" + certificate.getId() + " não possui revista associada.");
+                throw new IllegalStateException(
+                        "O certificado id=" + certificate.getId() + " não possui revista associada.");
             }
 
             // Instancia o MailSender dinâmico da revista
@@ -122,7 +125,8 @@ public class CertificateEmailService {
             certificate.setStatus(CertificateStatus.EMAIL_SENT);
             certificateRepository.save(certificate);
 
-            log.info("E-mail enviado com sucesso de {} para {} (certificado id={})", magazine.getEmail(), recipient, certificate.getId());
+            log.info("E-mail enviado com sucesso de {} para {} (certificado id={})", magazine.getEmail(), recipient,
+                    certificate.getId());
 
         } catch (Exception e) {
             certificate.setStatus(CertificateStatus.EMAIL_FAILED);
@@ -168,10 +172,11 @@ public class CertificateEmailService {
                     <p>Atenciosamente,<br>Equipe da %s</p>
                   </body>
                 </html>
-                """.formatted(
-                name != null ? name : "Prezado(a)",
-                magazineName,
-                certificate.getValidationCode() != null ? certificate.getValidationCode().toString() : "",
-                magazineName);
+                """
+                .formatted(
+                        name != null ? name : "Prezado(a)",
+                        magazineName,
+                        certificate.getValidationCode() != null ? certificate.getValidationCode().toString() : "",
+                        magazineName);
     }
 }
