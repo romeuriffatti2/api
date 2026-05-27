@@ -47,7 +47,7 @@ public class Certificate {
     private Map<String, Object> metadata;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "person_id")
+    @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 
     private String recipientEmail;
