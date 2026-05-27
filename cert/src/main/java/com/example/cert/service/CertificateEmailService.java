@@ -78,6 +78,23 @@ public class CertificateEmailService {
     }
 
     /**
+     * Envia o lote de certificados para um endereço de e-mail explícito.
+     * <p>
+     * Usado quando o endereço de destino pode diferir do e-mail cadastrado nos certificados —
+     * por exemplo, quando o usuário buscou por um e-mail antigo (inativo) e os certificados
+     * devem ser enviados para o e-mail ativo atual da Person.
+     *
+     * @param certificates Lista de certificados a enviar.
+     * @param targetEmail  Endereço de e-mail ativo atual do destinatário.
+     */
+    @Async
+    public void sendBatchToAddress(List<Certificate> certificates, String targetEmail) {
+        for (Certificate certificate : certificates) {
+            send(certificate, targetEmail);
+        }
+    }
+
+    /**
      * Tenta reenviar o certificado para o destinatário associado.
      */
     @Async

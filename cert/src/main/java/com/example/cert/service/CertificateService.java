@@ -5,12 +5,15 @@ import lombok.RequiredArgsConstructor;
 import jakarta.annotation.PostConstruct;
 import com.example.cert.domain.Certificate;
 import com.example.cert.domain.CertificateTemplate;
+import com.example.cert.domain.EmailStatus;
 import com.example.cert.domain.Magazine;
 import com.example.cert.domain.Person;
+import com.example.cert.domain.PersonEmail;
 import com.example.cert.mapper.CertificateMapper;
 import com.example.cert.repository.CertificateRepository;
 import com.example.cert.repository.CertificateTemplateRepository;
 import com.example.cert.repository.MagazineRepository;
+import com.example.cert.repository.PersonEmailRepository;
 import com.example.cert.repository.PersonRepository;
 import com.example.cert.request.CertificateItemRequest;
 import com.example.cert.request.CertificateRequest;
@@ -43,6 +46,7 @@ public class CertificateService {
     private final CertificateTemplateRepository certificateTemplateRepository;
     private final CertificateEmailService certificateEmailService;
     private final PersonRepository personRepository;
+    private final PersonEmailRepository personEmailRepository;
 
     @Value("${app.certificate.storage.path}")
     private String storagePath;
@@ -104,6 +108,7 @@ public class CertificateService {
      *
      * - Modo "Pesquisar Pessoas": personId já conhecido → busca por ID (confiável)
      * - Modo "Adicionar Manualmente": upsert por CPF → cria Person se não existir
+     *   e registra o e-mail em person_email para rastreamento histórico.
      */
     private Person resolveOrCreatePerson(CertificateItemRequest item) {
 
@@ -133,8 +138,33 @@ public class CertificateService {
                     .email(item.getEmail())
                     .cpf(normalizedCpf)
                     .build();
-            return personRepository.save(newPerson);
+            Person saved = personRepository.save(newPerson);
+
+            // Registra o e-mail em person_email para rastreamento histórico
+            if (saved.getEmail() != null && !saved.getEmail().isBlank()) {
+                registerEmailHistory(saved, saved.getEmail());
+            }
+
+            return saved;
         });
+    }
+
+    /**
+     * Registra um e-mail na tabela person_email se ainda não existir.
+     * Chamado ao criar uma Person para garantir que o e-mail esteja no histórico
+     * e seja resolvível na funcionalidade "Receber por E-mail".
+     */
+    private void registerEmailHistory(Person person, String email) {
+        String normalized = email.trim().toLowerCase();
+        if (!personEmailRepository.existsByEmail(normalized)) {
+            PersonEmail personEmail = PersonEmail.builder()
+                    .person(person)
+                    .email(normalized)
+                    .status(EmailStatus.ACTIVE)
+                    .createdAt(java.time.LocalDateTime.now())
+                    .build();
+            personEmailRepository.save(personEmail);
+        }
     }
 
     private void savePdfToDisk(UUID validationCode, String base64Pdf) {
@@ -177,17 +207,34 @@ public class CertificateService {
 
     /**
      * Busca todos os certificados vinculados ao e-mail informado e os reenvia.
+     * <p>
+     * A busca é feita na tabela {@code person_email} (histórico), permitindo que
+     * e-mails antigos (inativos) também resolvam a Person correta. Os certificados
+     * são sempre enviados para o e-mail <strong>ativo atual</strong> da Person.
+     * <p>
      * Sempre retorna normalmente — nunca revela se o e-mail está cadastrado
      * na plataforma (conformidade LGPD / segurança por obscuridade).
      */
     @Transactional(readOnly = true)
     public void sendCertificatesByEmail(String email) {
-        List<Certificate> certificates = certificateRepository.findByPersonEmail(email.trim().toLowerCase());
-        if (!certificates.isEmpty()) {
-            log.info("Disparando reenvio de {} certificado(s) para o e-mail: {}", certificates.size(), email);
-            certificateEmailService.sendBatch(certificates);
-        } else {
-            log.info("Nenhum certificado encontrado para o e-mail: {} (resposta omitida ao cliente)", email);
-        }
+        String normalizedEmail = email.trim().toLowerCase();
+
+        personEmailRepository.findByEmail(normalizedEmail).ifPresentOrElse(
+                personEmail -> {
+                    Person person = personEmail.getPerson();
+                    List<Certificate> certificates = certificateRepository.findByPerson(person);
+
+                    if (!certificates.isEmpty()) {
+                        log.info("Disparando reenvio de {} certificado(s) para a Person id={} (e-mail ativo: {})",
+                                certificates.size(), person.getId(), person.getEmail());
+                        // Envia sempre para o e-mail ATIVO atual, mesmo que a busca tenha sido por e-mail antigo
+                        certificateEmailService.sendBatchToAddress(certificates, person.getEmail());
+                    } else {
+                        log.info("Person id={} encontrada pelo histórico mas sem certificados (e-mail buscado: {})",
+                                person.getId(), normalizedEmail);
+                    }
+                },
+                () -> log.info("Nenhuma person encontrada para o e-mail: {} (resposta omitida ao cliente)", normalizedEmail)
+        );
     }
 }
