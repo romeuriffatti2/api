@@ -103,12 +103,13 @@ Como você já substituiu o arquivo `.jar` via SCP, agora só precisa reiniciar 
 3. Suba o container novamente recriando-o com o novo `.jar` (o Docker vai usar o novo jar na inicialização):
    ```bash
    docker run -d \
-   --name certificados-backend \
-   --network certificados-network \
-   -p 8080:8080 \
-   -v /opt/certificados/backend/src/main/resources/application-prod.yaml:/app/config/application-prod.yaml \
-   -v /opt/certificados/uploads:/app/uploads \
-   certificados-backend
+    --name certificados-backend \
+    --network certificados-network \
+    -p 8080:8080 \
+    -v /opt/certificados/backend/cert-0.0.1-SNAPSHOT.jar:/app/app.jar \
+    -v /opt/certificados/backend/src/main/resources/application-prod.yaml:/app/config/application-prod.yaml \
+    -v /opt/certificados/uploads:/app/uploads \
+    certificados-backend
    ```
    *(Nota: Se o seu serviço no docker-compose tiver outro nome, substitua `backend` pelo nome correto).*
 4. Verificar logs do build do backend:
