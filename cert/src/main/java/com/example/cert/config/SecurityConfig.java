@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/register").hasRole("ADMIN")
                         .requestMatchers("/api/certificate/validate/**", "/api/certificate/download/**").permitAll()
+                        .requestMatchers("/api/certificate/send-by-email").permitAll()
                         .requestMatchers("/api/certificates/validate/**", "/api/certificates/download/**").permitAll()
                         .requestMatchers("/api/certificates/search").permitAll()
                         .requestMatchers("/api/news/**").permitAll()

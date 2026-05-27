@@ -21,8 +21,6 @@ public class Certificate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-
     @Column(name = "validation_code")
     private UUID validationCode;
 
@@ -49,8 +47,6 @@ public class Certificate {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
-
-    private String recipientEmail;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

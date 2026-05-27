@@ -137,12 +137,9 @@ public class CertificateEmailService {
     }
 
     /**
-     * Resolve o e-mail do destinatário.
+     * Resolve o e-mail do destinatário — sempre via Person (fonte única).
      */
     private String resolveRecipient(Certificate certificate) {
-        if (certificate.getRecipientEmail() != null && !certificate.getRecipientEmail().isBlank()) {
-            return certificate.getRecipientEmail();
-        }
         if (certificate.getPerson() != null && certificate.getPerson().getEmail() != null) {
             return certificate.getPerson().getEmail();
         }
@@ -155,7 +152,7 @@ public class CertificateEmailService {
     private String buildEmailBody(Certificate certificate) {
         String name = certificate.getPerson() != null
                 ? certificate.getPerson().getName()
-                : certificate.getName();
+                : "Prezado(a)";
         String magazineName = certificate.getMagazine() != null
                 ? certificate.getMagazine().getName()
                 : "Revista";

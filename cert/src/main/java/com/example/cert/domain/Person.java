@@ -20,10 +20,11 @@ public class Person {
     @Column(nullable = false)
     private String name;
 
-    @Column(unique = true)
+    @CPF
+    @Column(unique = true, nullable = false)
+    private String cpf;
+
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @CPF
-    @Column(unique = true)
-    private String cpf;
 }

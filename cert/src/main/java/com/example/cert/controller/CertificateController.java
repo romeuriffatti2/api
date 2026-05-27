@@ -3,14 +3,18 @@ package com.example.cert.controller;
 import com.example.cert.Response.CertificateResponse;
 import com.example.cert.request.CertificateRequest;
 import com.example.cert.service.CertificateService;
+import com.example.cert.service.RateLimiterService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/certificate")
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class CertificateController {
 
     private CertificateService certificateService;
+    private RateLimiterService rateLimiterService;
 
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
@@ -56,4 +61,35 @@ public class CertificateController {
                 .headers(headers)
                 .body(pdf);
     }
+
+    /**
+     * Endpoint público — envia todos os certificados vinculados ao e-mail informado.
+     * Sempre retorna 200 OK para não revelar se o e-mail está cadastrado (LGPD).
+     * Rate limit: 5 requisições por IP a cada 10 minutos.
+     */
+    @PostMapping("/send-by-email")
+    public ResponseEntity<Void> sendCertificatesByEmail(
+            @RequestParam String email,
+            HttpServletRequest request) {
+
+        String ip = resolveClientIp(request);
+
+        if (!rateLimiterService.isAllowed(ip)) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                    "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.");
+        }
+
+        certificateService.sendCertificatesByEmail(email);
+        return ResponseEntity.ok().build();
+    }
+
+    /** Extrai o IP real do cliente, considerando proxies reversos. */
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
 }
+

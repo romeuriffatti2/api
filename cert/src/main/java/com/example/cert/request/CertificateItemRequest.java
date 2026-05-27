@@ -9,6 +9,7 @@ import java.util.UUID;
 @Setter
 public class CertificateItemRequest {
     private String name;
+    private String cpf;
     private String email;
     private Long personId;
     private UUID validationCode;
