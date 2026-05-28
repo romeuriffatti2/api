@@ -1,6 +1,7 @@
 package com.example.cert.Exceptions;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -37,5 +38,16 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
+    }
+
+    @ExceptionHandler(PersonDeletedException.class)
+    public ResponseEntity<PersonDeletedErrorResponse> handlePersonDeleted(PersonDeletedException ex) {
+        PersonDeletedErrorResponse body = PersonDeletedErrorResponse.builder()
+                .errorCode("PERSON_DELETED")
+                .personId(ex.getPersonId())
+                .personName(ex.getPersonName())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 }

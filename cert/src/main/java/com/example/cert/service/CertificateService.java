@@ -107,8 +107,9 @@ public class CertificateService {
      * seja sempre preenchido independente do modo de emissão.
      *
      * - Modo "Pesquisar Pessoas": personId já conhecido → busca por ID (confiável)
-     * - Modo "Adicionar Manualmente": upsert por CPF → cria Person se não existir
-     *   e registra o e-mail em person_email para rastreamento histórico.
+     * - Modo "Adicionar Manualmente": verifica conflitos por CPF e e-mail entre pessoas
+     *   ativas. Se já existir, orienta o operador a usar o modo "Pesquisar Pessoas".
+     *   Se não existir, cria nova Person e registra o e-mail no histórico.
      */
     private Person resolveOrCreatePerson(CertificateItemRequest item) {
 
@@ -120,17 +121,32 @@ public class CertificateService {
                             "Pessoa não encontrada com id=" + item.getPersonId()));
         }
 
-        // Modo "Adicionar Manualmente": upsert por CPF (chave natural única)
+        // Modo "Adicionar Manualmente": CPF obrigatório
         String rawCpf = item.getCpf();
         if (rawCpf == null || rawCpf.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "CPF é obrigatório para emissão de certificado no modo manual.");
         }
 
-        // Normaliza CPF removendo pontuação (ex: "123.456.789-09" → "12345678909")
         String normalizedCpf = rawCpf.replaceAll("[^\\d]", "");
 
-        return personRepository.findByCpf(normalizedCpf).orElseGet(() -> {
+        // Bloqueia se CPF já pertence a pessoa ativa — deve usar modo Pesquisar Pessoas
+        if (personRepository.findByCpfAndDeletedFalse(normalizedCpf).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "CPF já cadastrado no sistema. Adicione esta pessoa pelo modo 'Pesquisar Pessoas'.");
+        }
+
+        // Bloqueia se e-mail já pertence a pessoa ativa
+        if (item.getEmail() != null && !item.getEmail().isBlank()) {
+            String normalizedEmail = item.getEmail().trim().toLowerCase();
+            if (personRepository.findByEmailAndDeletedFalse(normalizedEmail).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "E-mail já cadastrado no sistema. Adicione esta pessoa pelo modo 'Pesquisar Pessoas'.");
+            }
+        }
+
+        // Nenhum conflito → cria nova Person
+        return personRepository.findByCpfAndDeletedFalse(normalizedCpf).orElseGet(() -> {
             log.info("Criando nova Person via fluxo manual: name='{}', cpf='{}'",
                     item.getName(), normalizedCpf);
             Person newPerson = Person.builder()
@@ -148,6 +164,7 @@ public class CertificateService {
             return saved;
         });
     }
+
 
     /**
      * Registra um e-mail na tabela person_email se ainda não existir.

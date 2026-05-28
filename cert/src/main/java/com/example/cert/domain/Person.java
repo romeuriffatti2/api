@@ -2,6 +2,7 @@ package com.example.cert.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.validator.constraints.br.CPF;
 
 @Entity
@@ -26,5 +27,8 @@ public class Person {
 
     @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean deleted = false;
 
 }
