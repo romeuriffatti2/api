@@ -39,20 +39,30 @@ public class PersonService {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
         String normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
 
-        // Verifica unicidade de e-mail: inclui inativos em person_email
-        if (personEmailRepository.existsByEmail(normalizedEmail)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
-        }
-
-        // Verifica CPF apenas entre pessoas ativas
-        if (personRepository.findByCpfAndDeletedFalse(normalizedCpf).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já cadastrado");
-        }
-
         // Verifica se CPF pertence a pessoa deletada — oferece reativação no frontend
-        personRepository.findByCpf(normalizedCpf).ifPresent(deleted -> {
-            if (deleted.isDeleted()) {
-                throw new PersonDeletedException(deleted.getId(), deleted.getName());
+        personRepository.findByCpf(normalizedCpf).ifPresent(personCpf -> {
+            if (personCpf.isDeleted()) {
+                throw new PersonDeletedException(personCpf.getId(), personCpf.getName());
+            } else {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já cadastrado");
+            }
+        });
+
+        // Verifica unicidade de e-mail: inclui inativos em person_email e na propria tabela person
+        personRepository.findByEmail(normalizedEmail).ifPresent(personByEmail -> {
+            if (personByEmail.isDeleted()) {
+                throw new PersonDeletedException(personByEmail.getId(), personByEmail.getName());
+            } else {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
+            }
+        });
+
+        personEmailRepository.findByEmail(normalizedEmail).ifPresent(personEmail -> {
+            Person personByEmail = personEmail.getPerson();
+            if (personByEmail.isDeleted()) {
+                throw new PersonDeletedException(personByEmail.getId(), personByEmail.getName());
+            } else {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
             }
         });
 
