@@ -17,7 +17,10 @@ public class PersonRequest {
     @Email(message = "Email inválido")
     private String email;
 
-    @NotBlank(message = "CPF é obrigatório")
+    /**
+     * CPF é opcional. Quando informado, deve ser um CPF válido.
+     * Não utilizar @NotBlank para permitir omissão.
+     */
     @CPF(message = "CPF inválido")
     private String cpf;
 }

@@ -37,16 +37,24 @@ public class PersonService {
     @Transactional
     public PersonResponse postPerson(PersonRequest request) {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
-        String normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
+
+        // Normaliza CPF apenas se foi informado
+        String normalizedCpf = null;
+        if (request.getCpf() != null && !request.getCpf().isBlank()) {
+            normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
+        }
 
         // Verifica se CPF pertence a pessoa deletada — oferece reativação no frontend
-        personRepository.findByCpf(normalizedCpf).ifPresent(personCpf -> {
-            if (personCpf.isDeleted()) {
-                throw new PersonDeletedException(personCpf.getId(), personCpf.getName());
-            } else {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já cadastrado");
-            }
-        });
+        if (normalizedCpf != null) {
+            final String cpfToCheck = normalizedCpf;
+            personRepository.findByCpf(cpfToCheck).ifPresent(personCpf -> {
+                if (personCpf.isDeleted()) {
+                    throw new PersonDeletedException(personCpf.getId(), personCpf.getName());
+                } else {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já cadastrado");
+                }
+            });
+        }
 
         // Verifica unicidade de e-mail: inclui inativos em person_email e na propria tabela person
         personRepository.findByEmail(normalizedEmail).ifPresent(personByEmail -> {
@@ -119,11 +127,17 @@ public class PersonService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pessoa não encontrada"));
 
         String normalizedEmail = request.getEmail().trim().toLowerCase();
-        String normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
 
-        // Valida CPF: não pode pertencer a outra pessoa ativa
-        if (!normalizedCpf.equals(person.getCpf())) {
-            personRepository.findByCpfAndDeletedFalse(normalizedCpf).ifPresent(other -> {
+        // Normaliza CPF apenas se foi informado
+        String normalizedCpf = null;
+        if (request.getCpf() != null && !request.getCpf().isBlank()) {
+            normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
+        }
+
+        // Valida CPF: não pode pertencer a outra pessoa ativa (apenas se novo CPF informado)
+        if (normalizedCpf != null && !normalizedCpf.equals(person.getCpf())) {
+            final String cpfToCheck = normalizedCpf;
+            personRepository.findByCpfAndDeletedFalse(cpfToCheck).ifPresent(other -> {
                 if (!other.getId().equals(id)) {
                     throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já em uso por outro cadastro");
                 }
@@ -179,14 +193,22 @@ public class PersonService {
         }
 
         String normalizedEmail = request.getEmail().trim().toLowerCase();
-        String normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
 
-        // Valida CPF: não pode pertencer a outra pessoa ativa
-        personRepository.findByCpfAndDeletedFalse(normalizedCpf).ifPresent(other -> {
-            if (!other.getId().equals(id)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já em uso por outro cadastro");
-            }
-        });
+        // Normaliza CPF apenas se foi informado
+        String normalizedCpf = null;
+        if (request.getCpf() != null && !request.getCpf().isBlank()) {
+            normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
+        }
+
+        // Valida CPF: não pode pertencer a outra pessoa ativa (apenas se informado)
+        if (normalizedCpf != null) {
+            final String cpfToCheck = normalizedCpf;
+            personRepository.findByCpfAndDeletedFalse(cpfToCheck).ifPresent(other -> {
+                if (!other.getId().equals(id)) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já em uso por outro cadastro");
+                }
+            });
+        }
 
         // Valida e trata e-mail
         if (!normalizedEmail.equals(person.getEmail())) {

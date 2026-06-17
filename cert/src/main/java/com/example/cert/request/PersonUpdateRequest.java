@@ -11,6 +11,7 @@ import org.hibernate.validator.constraints.br.CPF;
  * <p>
  * Diferente de {@link PersonRequest} (usado no cadastro), aqui o CPF é permitido
  * ser alterado — o vínculo com certificados é por {@code person_id}, não por CPF.
+ * O CPF é opcional: pode ser omitido ou atualizado para null.
  */
 @Getter
 @Setter
@@ -23,7 +24,9 @@ public class PersonUpdateRequest {
     @Email(message = "Email inválido")
     private String email;
 
-    @NotBlank(message = "CPF é obrigatório")
+    /**
+     * CPF é opcional. Quando informado, deve ser um CPF válido.
+     */
     @CPF(message = "CPF inválido")
     private String cpf;
 }

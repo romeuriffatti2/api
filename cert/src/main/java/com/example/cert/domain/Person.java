@@ -2,7 +2,7 @@ package com.example.cert.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.validator.constraints.br.CPF;
+
 
 @Entity
 @Table(name = "person")
@@ -20,8 +20,7 @@ public class Person {
     @Column(nullable = false)
     private String name;
 
-    @CPF
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private String cpf;
 
     @Column(unique = true, nullable = false)
