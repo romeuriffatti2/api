@@ -61,8 +61,17 @@ public class CertificateService {
         }
     }
 
-    public Page<CertificateResponse> getAllCertificates(Pageable pageable) {
-        return certificateRepository.findAll(pageable).map(certificateMapper::toResponse);
+    public Page<CertificateResponse> getAllCertificates(String name, String cpf, String email, Pageable pageable) {
+        if ((name == null || name.isBlank()) && (cpf == null || cpf.isBlank()) && (email == null || email.isBlank())) {
+            return certificateRepository.findAll(pageable).map(certificateMapper::toResponse);
+        }
+
+        String searchName = name != null && !name.isBlank() ? "%" + name + "%" : "%";
+        String searchCpf = cpf != null && !cpf.isBlank() ? "%" + cpf + "%" : "%";
+        String searchEmail = email != null && !email.isBlank() ? "%" + email + "%" : "%";
+
+        return certificateRepository.searchCertificates(searchName, searchCpf, searchEmail, pageable)
+                .map(certificateMapper::toResponse);
     }
 
     @Transactional
@@ -107,9 +116,10 @@ public class CertificateService {
      * seja sempre preenchido independente do modo de emissão.
      *
      * - Modo "Pesquisar Pessoas": personId já conhecido → busca por ID (confiável)
-     * - Modo "Adicionar Manualmente": verifica conflitos por CPF e e-mail entre pessoas
-     *   ativas. Se já existir, orienta o operador a usar o modo "Pesquisar Pessoas".
-     *   Se não existir, cria nova Person e registra o e-mail no histórico.
+     * - Modo "Adicionar Manualmente": verifica conflitos por CPF e e-mail entre
+     * pessoas
+     * ativas. Se já existir, orienta o operador a usar o modo "Pesquisar Pessoas".
+     * Se não existir, cria nova Person e registra o e-mail no histórico.
      */
     private Person resolveOrCreatePerson(CertificateItemRequest item, Long usuarioId) {
 
@@ -165,7 +175,6 @@ public class CertificateService {
             return saved;
         });
     }
-
 
     /**
      * Registra um e-mail na tabela person_email se ainda não existir.
@@ -238,7 +247,7 @@ public class CertificateService {
         String normalizedEmail = email.trim().toLowerCase();
 
         List<PersonEmail> personEmails = personEmailRepository.findAllByEmail(normalizedEmail);
-        
+
         if (personEmails.isEmpty()) {
             log.info("Nenhuma person encontrada para o e-mail: {} (resposta omitida ao cliente)", normalizedEmail);
             return;
@@ -251,7 +260,8 @@ public class CertificateService {
             if (!certificates.isEmpty()) {
                 log.info("Disparando reenvio de {} certificado(s) para a Person id={} (e-mail ativo: {})",
                         certificates.size(), person.getId(), person.getEmail());
-                // Envia sempre para o e-mail ATIVO atual, mesmo que a busca tenha sido por e-mail antigo
+                // Envia sempre para o e-mail ATIVO atual, mesmo que a busca tenha sido por
+                // e-mail antigo
                 certificateEmailService.sendBatchToAddress(certificates, person.getEmail());
             } else {
                 log.info("Person id={} encontrada pelo histórico mas sem certificados (e-mail buscado: {})",

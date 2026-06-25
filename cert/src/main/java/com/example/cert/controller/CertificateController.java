@@ -35,8 +35,12 @@ public class CertificateController {
 
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
-    public Page<CertificateResponse> getAllCertificates(Pageable pageable) {
-        return certificateService.getAllCertificates(pageable);
+    public Page<CertificateResponse> getAllCertificates(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String cpf,
+            @RequestParam(required = false) String email,
+            Pageable pageable) {
+        return certificateService.getAllCertificates(name, cpf, email, pageable);
     }
 
     @PostMapping("/generate")

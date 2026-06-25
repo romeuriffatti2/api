@@ -300,7 +300,7 @@ public class TemplateHelpersService {
                 {
                   "name": "body",
                   "type": "text",
-                  "content": "Prezados(as) {{name}},\\n\\nA {{magazineName}}, ISSN {{issn}} (Online), vinculada ao Centro de Estudos Interdisciplinares (CEEINTER), tem a satisfação de informar que o artigo intitulado {{articleTitle}}, submetido para avaliação, foi ACEITO para publicação, com previsão de lançamento no Volume {{volume}}, Número {{number}}, referente ao mês/ano de {{publishMonthYear}}.\\n\\nO trabalho foi aprovado após avaliação por pares ad hoc.",
+                  "content": "Prezados(as) {{name}},\\n\\nA {{magazineName}}, ISSN {{issn}} (Online), vinculada ao Centro de Estudos Interdisciplinares (CEEINTER), tem a satisfação de informar que o artigo intitulado {{articleTitle}}, submetido para avaliação, foi ACEITO para publicação, com previsão de lançamento no Volume {{volume}}, Número {{number}}, referente ao mês/ano de {{publishMonth}}/{{publishYear}}.\\n\\nO trabalho foi aprovado após avaliação por pares ad hoc.",
                   "position": {"x": 20, "y": 95},
                   "width": 257, "height": 60,
                   "fontSize": 14, "fontColor": "#333333",

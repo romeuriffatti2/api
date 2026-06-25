@@ -11,9 +11,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
+
 public interface CertificateRepository extends JpaRepository<Certificate, Long> {
     @EntityGraph(attributePaths = {"magazine"})
     Page<Certificate> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"magazine", "person"})
+    @Query("SELECT c FROM Certificate c JOIN c.person p WHERE " +
+           "(:name = '%' OR LOWER(p.name) LIKE LOWER(:name)) AND " +
+           "(:cpf = '%' OR p.cpf LIKE :cpf) AND " +
+           "(:email = '%' OR LOWER(p.email) LIKE LOWER(:email))")
+    Page<Certificate> searchCertificates(@Param("name") String name, @Param("cpf") String cpf, @Param("email") String email, Pageable pageable);
 
     @EntityGraph(attributePaths = {"magazine"})
     Optional<Certificate> findByValidationCode(UUID validationCode);
