@@ -23,10 +23,7 @@ import java.time.LocalDateTime;
  * endereço ativo atual da pessoa, sem expor informações desnecessárias (LGPD).
  */
 @Entity
-@Table(
-    name = "person_email",
-    uniqueConstraints = @UniqueConstraint(name = "uk_person_email_email", columnNames = "email")
-)
+@Table(name = "person_email")
 @Getter
 @Setter
 @Builder
@@ -42,7 +39,7 @@ public class PersonEmail {
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Enumerated(EnumType.STRING)

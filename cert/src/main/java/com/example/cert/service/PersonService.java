@@ -27,59 +27,49 @@ public class PersonService {
     private final PersonRepository personRepository;
     private final PersonEmailRepository personEmailRepository;
 
-    /**
-     * Cadastra uma nova Person na plataforma e registra o e-mail no histórico.
-     * <p>
-     * Valida unicidade de e-mail e CPF apenas entre pessoas <strong>ativas</strong>.
-     * Se o CPF pertencer a uma pessoa deletada, retorna 409 com errorCode "PERSON_DELETED"
-     * para que o frontend ofereça a opção de reativação.
-     */
     @Transactional
-    public PersonResponse postPerson(PersonRequest request) {
+    public PersonResponse postPerson(PersonRequest request, Long usuarioId) {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
 
-        // Normaliza CPF apenas se foi informado
         String normalizedCpf = null;
         if (request.getCpf() != null && !request.getCpf().isBlank()) {
             normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
         }
 
-        // Verifica se CPF pertence a pessoa deletada — oferece reativação no frontend
         if (normalizedCpf != null) {
             final String cpfToCheck = normalizedCpf;
-            personRepository.findByCpf(cpfToCheck).ifPresent(personCpf -> {
+            personRepository.findByCpfAndUsuarioId(cpfToCheck, usuarioId).ifPresent(personCpf -> {
                 if (personCpf.isDeleted()) {
                     throw new PersonDeletedException(personCpf.getId(), personCpf.getName());
                 } else {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já cadastrado");
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já cadastrado na sua lista de pessoas");
                 }
             });
         }
 
-        // Verifica unicidade de e-mail: inclui inativos em person_email e na propria tabela person
-        personRepository.findByEmail(normalizedEmail).ifPresent(personByEmail -> {
+        personRepository.findByEmailAndUsuarioId(normalizedEmail, usuarioId).ifPresent(personByEmail -> {
             if (personByEmail.isDeleted()) {
                 throw new PersonDeletedException(personByEmail.getId(), personByEmail.getName());
             } else {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado na sua lista de pessoas");
             }
         });
 
-        personEmailRepository.findByEmail(normalizedEmail).ifPresent(personEmail -> {
+        personEmailRepository.findByEmailAndPersonUsuarioId(normalizedEmail, usuarioId).ifPresent(personEmail -> {
             Person personByEmail = personEmail.getPerson();
             if (personByEmail.isDeleted()) {
                 throw new PersonDeletedException(personByEmail.getId(), personByEmail.getName());
             } else {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado na sua lista de pessoas");
             }
         });
 
         Person person = PersonMapper.toEntity(request);
         person.setEmail(normalizedEmail);
         person.setCpf(normalizedCpf);
+        person.setUsuarioId(usuarioId);
         personRepository.save(person);
 
-        // Registra o e-mail no histórico como ativo
         PersonEmail personEmail = PersonEmail.builder()
                 .person(person)
                 .email(normalizedEmail)
@@ -91,74 +81,54 @@ public class PersonService {
         return PersonMapper.toResponse(person);
     }
 
-    /** Lista todas as pessoas ativas (não deletadas). */
-    public List<PersonResponse> getAllPersons() {
-        return personRepository.findAllByDeletedFalse().stream()
+    public List<PersonResponse> getAllPersons(Long usuarioId) {
+        return personRepository.findAllByDeletedFalseAndUsuarioId(usuarioId).stream()
                 .map(PersonMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Exclusão lógica de uma Person.
-     * <p>
-     * Marca {@code deleted = true}. O histórico de {@code PersonEmail} é preservado
-     * integralmente para rastreabilidade de certificados emitidos anteriormente.
-     */
     @Transactional
-    public void deletePerson(Long id) {
-        Person person = personRepository.findByIdAndDeletedFalse(id)
+    public void deletePerson(Long id, Long usuarioId) {
+        Person person = personRepository.findByIdAndDeletedFalseAndUsuarioId(id, usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pessoa não encontrada"));
 
         person.setDeleted(true);
         personRepository.save(person);
     }
 
-    /**
-     * Atualiza os dados de uma Person ativa.
-     * <p>
-     * CPF e e-mail são validados contra outras pessoas ativas.
-     * Se o e-mail for alterado, o registro anterior em {@code PersonEmail} é marcado
-     * como {@link EmailStatus#INACTIVE} e um novo registro {@link EmailStatus#ACTIVE} é criado,
-     * preservando o histórico completo para resolução retroativa de certificados.
-     */
     @Transactional
-    public PersonResponse updatePerson(Long id, PersonUpdateRequest request) {
-        Person person = personRepository.findByIdAndDeletedFalse(id)
+    public PersonResponse updatePerson(Long id, PersonUpdateRequest request, Long usuarioId) {
+        Person person = personRepository.findByIdAndDeletedFalseAndUsuarioId(id, usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pessoa não encontrada"));
 
         String normalizedEmail = request.getEmail().trim().toLowerCase();
 
-        // Normaliza CPF apenas se foi informado
         String normalizedCpf = null;
         if (request.getCpf() != null && !request.getCpf().isBlank()) {
             normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
         }
 
-        // Valida CPF: não pode pertencer a outra pessoa ativa (apenas se novo CPF informado)
         if (normalizedCpf != null && !normalizedCpf.equals(person.getCpf())) {
             final String cpfToCheck = normalizedCpf;
-            personRepository.findByCpfAndDeletedFalse(cpfToCheck).ifPresent(other -> {
+            personRepository.findByCpfAndDeletedFalseAndUsuarioId(cpfToCheck, usuarioId).ifPresent(other -> {
                 if (!other.getId().equals(id)) {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já em uso por outro cadastro");
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já em uso por outro cadastro na sua lista");
                 }
             });
         }
 
-        // Valida e-mail: não pode pertencer ao histórico de outra pessoa
         if (!normalizedEmail.equals(person.getEmail())) {
-            personEmailRepository.findByEmail(normalizedEmail).ifPresent(existing -> {
+            personEmailRepository.findByEmailAndPersonUsuarioId(normalizedEmail, usuarioId).ifPresent(existing -> {
                 if (!existing.getPerson().getId().equals(id)) {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já em uso por outro cadastro");
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já em uso por outro cadastro na sua lista");
                 }
             });
 
-            // Inativa e-mail atual no histórico
-            personEmailRepository.findByEmail(person.getEmail()).ifPresent(current -> {
+            personEmailRepository.findByEmailAndPersonUsuarioId(person.getEmail(), usuarioId).ifPresent(current -> {
                 current.setStatus(EmailStatus.INACTIVE);
                 personEmailRepository.save(current);
             });
 
-            // Registra novo e-mail como ativo no histórico
             PersonEmail newEmail = PersonEmail.builder()
                     .person(person)
                     .email(normalizedEmail)
@@ -177,15 +147,9 @@ public class PersonService {
         return PersonMapper.toResponse(person);
     }
 
-    /**
-     * Reativa uma Person previamente deletada (delete lógico revertido).
-     * <p>
-     * Atualiza nome, CPF e e-mail com os dados fornecidos, tratando o histórico
-     * de {@code PersonEmail} da mesma forma que {@link #updatePerson}.
-     */
     @Transactional
-    public PersonResponse reactivatePerson(Long id, PersonUpdateRequest request) {
-        Person person = personRepository.findById(id)
+    public PersonResponse reactivatePerson(Long id, PersonUpdateRequest request, Long usuarioId) {
+        Person person = personRepository.findByIdAndUsuarioId(id, usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pessoa não encontrada"));
 
         if (!person.isDeleted()) {
@@ -194,37 +158,32 @@ public class PersonService {
 
         String normalizedEmail = request.getEmail().trim().toLowerCase();
 
-        // Normaliza CPF apenas se foi informado
         String normalizedCpf = null;
         if (request.getCpf() != null && !request.getCpf().isBlank()) {
             normalizedCpf = request.getCpf().replaceAll("[^\\d]", "");
         }
 
-        // Valida CPF: não pode pertencer a outra pessoa ativa (apenas se informado)
         if (normalizedCpf != null) {
             final String cpfToCheck = normalizedCpf;
-            personRepository.findByCpfAndDeletedFalse(cpfToCheck).ifPresent(other -> {
+            personRepository.findByCpfAndDeletedFalseAndUsuarioId(cpfToCheck, usuarioId).ifPresent(other -> {
                 if (!other.getId().equals(id)) {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já em uso por outro cadastro");
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já em uso por outro cadastro na sua lista");
                 }
             });
         }
 
-        // Valida e trata e-mail
         if (!normalizedEmail.equals(person.getEmail())) {
-            personEmailRepository.findByEmail(normalizedEmail).ifPresent(existing -> {
+            personEmailRepository.findByEmailAndPersonUsuarioId(normalizedEmail, usuarioId).ifPresent(existing -> {
                 if (!existing.getPerson().getId().equals(id)) {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já em uso por outro cadastro");
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já em uso por outro cadastro na sua lista");
                 }
             });
 
-            // Inativa e-mail anterior no histórico
-            personEmailRepository.findByEmail(person.getEmail()).ifPresent(current -> {
+            personEmailRepository.findByEmailAndPersonUsuarioId(person.getEmail(), usuarioId).ifPresent(current -> {
                 current.setStatus(EmailStatus.INACTIVE);
                 personEmailRepository.save(current);
             });
 
-            // Registra novo e-mail ativo
             PersonEmail newEmail = PersonEmail.builder()
                     .person(person)
                     .email(normalizedEmail)

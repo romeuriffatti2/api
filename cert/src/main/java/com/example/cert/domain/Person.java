@@ -17,13 +17,16 @@ public class Person {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "usuario_id", nullable = false)
+    private Long usuarioId;
+
     @Column(nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = true)
+    @Column(nullable = true)
     private String cpf;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String email;
 
     @Builder.Default

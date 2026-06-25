@@ -4,8 +4,10 @@ import com.example.cert.Response.CertificateResponse;
 import com.example.cert.request.CertificateRequest;
 import com.example.cert.service.CertificateService;
 import com.example.cert.service.RateLimiterService;
+import com.example.cert.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
+import java.security.Principal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +25,13 @@ public class CertificateController {
 
     private CertificateService certificateService;
     private RateLimiterService rateLimiterService;
+    private UserRepository userRepository;
+
+    private Long getUsuarioId(Principal principal) {
+        return userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado"))
+                .getId();
+    }
 
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
@@ -32,8 +41,8 @@ public class CertificateController {
 
     @PostMapping("/generate")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
-    public ResponseEntity<Void> createCertificate(@RequestBody CertificateRequest certificateRequest) {
-        certificateService.create(certificateRequest);
+    public ResponseEntity<Void> createCertificate(@RequestBody CertificateRequest certificateRequest, Principal principal) {
+        certificateService.create(certificateRequest, getUsuarioId(principal));
         return ResponseEntity.ok().build();
     }
 

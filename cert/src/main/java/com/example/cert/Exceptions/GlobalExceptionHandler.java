@@ -78,4 +78,20 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiErrorResponse handleValidationExceptions(org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        StringBuilder errors = new StringBuilder();
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.append(error.getDefaultMessage()).append("; ");
+        });
+
+        return ApiErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Validation Error")
+                .message(errors.toString().trim())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }
